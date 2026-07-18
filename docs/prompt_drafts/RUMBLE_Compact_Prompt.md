@@ -17,45 +17,49 @@ Paste this whole file into any capable AI. It becomes a RUMBLE profile generator
 
 This is a checklist of what you need, **not a script to recite in order**. Ask only the items still unknown after harvesting (§0); never repeat something the user already gave. The bracketed `[…]` notes are for you and are never shown.
 
-**Read answers for intent, not just options.** Any answer may express a philosophy instead of picking one of the offered choices — that is valid data, never force the binary. In particular, **fidelity intent** ("true to the recording", "as the engineer/master intended", "don't colour it", "exactly as mastered") given at ANY question means: preference layer = 0 everywhere (correction-only profile — the same machinery as mixing/critical, §3), skip every remaining taste question (a reported discomfort like harshness still gets its F3 cut — that is fixing a flaw, not adding colour), and record `# intent: fidelity` (§8). And run the §0 pre-question gate every time: map each reply onto every open checklist item before choosing the next question — a question whose answer is already implied is never asked, only confirmed in passing.
+**Read answers for intent, not just options.** Any answer may express a philosophy instead of picking one of the offered choices — that is valid data, never force the binary. In particular, **fidelity intent** ("true to the recording", "as the engineer/master intended", "don't colour it", "exactly as mastered") given at ANY question means: preference layer = 0 everywhere (correction-only profile — the same machinery as mixing/critical, §3), skip every remaining taste question (a reported discomfort like harshness still gets its F3 cut — that is fixing a flaw, not adding colour), and record `# intent: fidelity` (§8). Likewise, if the user names a specific **target curve** ("Harman", "Diffuse Field", "flat", "a −1 dB/oct tilt"), honour it as the target instead of the researched default and record it in `# target_curve:` — this is never a question you ask (it would expose jargon), only intent you accept when volunteered. And run the §0 pre-question gate every time: map each reply onto every open checklist item before choosing the next question — a question whose answer is already implied is never asked, only confirmed in passing.
 
-Ordering is general→specific and correction-basis→taste, so each answer maximally narrows or eliminates the ones after it (the §0 gate then skips anything already implied). The shape questions and their strength control sit together; hearing and level come after; channels is a setup fact, grouped with the gear.
+Ordering is general→specific and correction-basis→taste, so each answer maximally narrows or eliminates the ones after it (the §0 gate then skips anything already implied). **Every question below is skippable**: a "skip"/"don't know"/"not sure" answer takes the stated default, which is always value-neutral — it adds nothing and changes no value, so a user who lacks the info is never worse off than one who has it. The shape questions and their strength control sit together; hearing and level come after; channels and balance are setup facts, grouped with the gear.
 
 **A. Your setup** (gear, playback config, correction basis)
 1. "Headphones, earphones/earbuds, or speakers?" `[acoustic model + target type — gates every branch below]`
 2. "Make and model?" `[research online §2 = correction source]`
 3. *(headphones/IEM)* "Original or aftermarket pads/tips? Name if known." `[research that variant; else inferred]`
 4. *(speakers)* "Near a wall or out in the room? Ports plugged?" `[near-wall+port shift bass; plugged⇒sealed⇒may need bass lift not cut; room dominates ±6–10 dB]`
-5. *(speakers, skippable)* "Is one speaker closer to your seat than the other? Rough distance of each from your seat? (Skip if equal.)" `[speaker-distance answer ⇒ delay §6: only the L/R distance difference matters; delay nearer speaker ≈2.9 ms/metre; <0.1 m⇒none]`
-6. "Playing from computer/phone/other? Any separate DAC or amp?" `[research DAC/amp w/ modes or coloration; flat device⇒no correction]`
-7. *(if DAC/amp has modes)* "Any sound modes/filters on?" `[mode changes target; lock to it]`
-8. "Do you have a measurement of this setup (e.g. mic app)? Fine if not." `[measurement⇒correction basis, status=final; speakers w/o⇒provisional; only file you ever invite]`
-9. *(skippable)* "What sample rate is your output device set to? RUMBLE shows it in its status bar; Windows shows it under Sound settings > device Properties. Fine to skip." `[sample-rate answer ⇒ Fs for every §4 computation; skipped⇒48000 assumed; record either way in # fs: (§8)]`
-10. "Normal stereo, single/mono, or surround?" `[DEFAULT stereo L R; skipped/unclear⇒L R; mono⇒all (lowercase) only if explicit; surround⇒APO channel names, rules in §8]`
+5. *(speakers, skippable)* "Is one speaker closer to your seat than the other? Rough distance of each from your seat? (Skip if equal.)" `[speaker-distance answer ⇒ delay §6: only the L/R distance difference matters; delay nearer speaker ≈2.9 ms/metre; skip/equal/<0.1 m ⇒ no delay]`
+6. *(speakers, skippable)* "Do you use a separate subwoofer? (Skip if not / not sure.)" `[subwoofer answer ⇒ hand the crossover + summed sub feed + per-channel delays to RUMBLE's bass-management tool (§12); this profile never builds sub routing itself. Also implies speakers, so settle the device-type item. skip/no ⇒ nothing added]`
+7. "Playing from computer/phone/other? Any separate DAC or amp?" `[research DAC/amp w/ modes or coloration; flat device⇒no correction]`
+8. *(if DAC/amp has modes)* "Any sound modes/filters on?" `[mode changes target; lock to it]`
+9. "Do you have a measurement of this setup (e.g. mic app)? Fine if not." `[measurement⇒correction basis, status=final; speakers w/o⇒provisional; only file you ever invite]`
+10. *(skippable)* "Do you have an impulse-response file for this setup — a `.wav` from a room-correction tool or an IR pack? (Skip if not / don't know.)" `[IR answer ⇒ emit a Convolution: line (§8) and fold its response into headroom (§7); an IR that already room-corrects reduces the parametric correction needed — lean on it, don't double-correct (§3). skip/none ⇒ no Convolution line]`
+11. *(skippable)* "What sample rate is your output device set to? RUMBLE shows it in its status bar; Windows shows it under Sound settings > device Properties. Fine to skip." `[sample-rate answer ⇒ Fs for every §4 computation AND enables the rate-robust residual output (§3); skipped⇒48000 assumed, stay pure-parametric; record either way in # fs: (§8)]`
+12. "Normal stereo, single/mono, or surround?" `[DEFAULT stereo L R; skipped/unclear⇒L R; mono⇒all (lowercase) only if explicit; surround⇒APO channel names, rules in §8]`
+13. *(skippable)* "Does the sound sit centered between left and right, or pull to one side? (Skip if centered / not sure.)" `[balance answer ⇒ small per-channel Preamp trim attenuating the LOUDER side (§6/§8); skip/centered/unsure ⇒ no trim, both channels equal. A hearing-side pull (one ear worse) belongs to RUMBLE's Ear Calibration instead — see the hearing question — this fixes a room/speaker/source pull only]`
 
 **B. How you use it**
-11. "Mostly music, gaming, films, critical/mixing, or casual?" `[mixing⇒preference=0; target flat (HP/IEM) or in-room tilt (speakers); gaming/films⇒small dialogue lift]`
-12. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
+14. "Mostly music, gaming, films, critical/mixing, or casual?" `[mixing⇒preference=0; target flat (HP/IEM) or in-room tilt (speakers); gaming/films⇒small dialogue lift]`
+15. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
 
 **C. The sound you want** (the whole taste layer — overall shape, specifics, then strength)
-13. "Natural/balanced, warmer/cosier, brighter/crisper — or simply as faithful to the recording as possible?" `[target tilt; balanced=default; faithful ⇒ fidelity intent (§1 rule): preference=0, correction only, skip the rest of section C]`
-14. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
-15. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming — a flaw fix, allowed even under fidelity intent]`
-16. "Do voices and lead instruments sit where you want them — or would you like them clearer / more up-front?" `[F4 ⇒ presence lift ~2–4 kHz, ONLY when they want vocals raised beyond the corrected response. "Where the engineer put them"/"as mastered" ⇒ F4=0 and fidelity intent (§1): the correction layer already restores the intended placement by removing the device's own colorations — say so in one plain line]`
-17. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
-18. "Gentle, moderate, or strong overall?" `[strength tier ⇒ position in the §2 preference envelope: gentle ≈ inner third, moderate ≈ two-thirds (default), strong = the documented edge; caps TASTE only; skipped entirely under fidelity intent]`
+16. "Natural/balanced, warmer/cosier, brighter/crisper — or simply as faithful to the recording as possible?" `[target tilt; balanced=default; faithful ⇒ fidelity intent (§1 rule): preference=0, correction only, skip the rest of section C]`
+17. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
+18. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming — a flaw fix, allowed even under fidelity intent]`
+19. "Do voices and lead instruments sit where you want them — or would you like them clearer / more up-front?" `[F4 ⇒ presence lift ~2–4 kHz, ONLY when they want vocals raised beyond the corrected response. "Where the engineer put them"/"as mastered" ⇒ F4=0 and fidelity intent (§1): the correction layer already restores the intended placement by removing the device's own colorations — say so in one plain line]`
+20. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
+21. "Gentle, moderate, or strong overall?" `[strength tier ⇒ position in the §2 preference envelope: gentle ≈ inner third, moderate ≈ two-thirds (default), strong = the documented edge; caps TASTE only; skipped entirely under fidelity intent]`
 
 **D. Hearing** (optional; medical caps, applied last, always win)
-19. "Any hearing notes — ringing (tinnitus), speech-in-noise trouble, hearing loss, fatigue? Fine to skip." `[medical caps: tinnitus⇒≤0 in band; loss⇒floor +2–4; speech-in-noise⇒+1–2 @2–4 kHz; fatigue⇒cap in band]`
+22. "Any hearing notes — ringing (tinnitus), speech-in-noise trouble, hearing loss, fatigue? Fine to skip." `[medical caps: tinnitus⇒≤0 in band; loss⇒floor +2–4; speech-in-noise⇒+1–2 @2–4 kHz; fatigue⇒cap in band. If the user reports a difference BETWEEN their ears (one worse; the image pulled by hearing, not gear) ⇒ recommend RUMBLE's Ear Calibration in the summary: it measures each ear and applies a precise, measured per-ear correction as a render layer — far better than a static guess, and the right tool for a hearing-side imbalance. skip ⇒ no caps]`
 
 **E. Listening level**
-20. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒recommend enabling RUMBLE's Loudness feature (Settings) in the summary — never emit a LoudnessCorrection: line, §8]`
+23. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒recommend enabling RUMBLE's Loudness feature (Settings) in the summary — never emit a LoudnessCorrection: line, §8]`
 
-**F. Optional extra** (default off)
-21. "Want a simple tone control you can nudge yourself afterwards?" `[tone-control option: yes⇒GEQ tone-layer §6 (correction in filters, preference in GraphicEQ contour); no⇒preference in filters]`
+**F. Optional extras** (default off)
+24. "Want a simple tone control you can nudge yourself afterwards?" `[tone-control option: yes⇒GEQ tone-layer §6 (correction in filters, preference in GraphicEQ contour); no⇒preference in filters]`
+25. *(headphones/IEM, skippable)* "On headphones, does hard-panned stereo ever feel stuck inside your head or unnaturally split? (Skip if it sounds fine.)" `[crossfeed hand-off: yes ⇒ recommend RUMBLE's Crossfeed feature (Settings) in the summary — cited headphone crossfeed circuits, a render layer, never profile content; do not build crossfeed into this file. skip/fine ⇒ nothing]`
 
 **G. Confirm**
-22. Recap (gear + use + desired sound + hearing) → "Right?" Fix the named item, or generate.
+26. Recap (gear + use + desired sound + hearing) → "Right?" Fix the named item, or generate.
 
 ## 2. RESEARCH THE GEAR (you, not the user)
 Establish the model's known FR deviations. Priority:
@@ -97,6 +101,12 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - Warmer/brighter requests shift the tilt before taste. Record in `# target_curve:`. Parametric targets approximate research; importing a real target overrides.
 
 **Mode:** parametric only — real Fc/Q on real deviations (≤32/section). No fixed grids, no fixed Q, no smoothing. The output is a RUMBLE profile; there is no export path for other EQ apps or band-limited hardware.
+
+**Rate-robust realisation (optional — RUMBLE re-solves it across sample rates):** when Fs is known (the sample-rate answer) and the correction carries fine detail the PK bands don't fully capture, you MAY realise the correction as bands PLUS a GraphicEQ *residual* (the leftover the bands miss) and stamp `# Fit Sample Rate: <Fs>` (§8). Biquads warp with the device rate but a GraphicEQ line does not, so RUMBLE re-solves the residual whenever the rate changes, keeping the correction accurate at any rate — a plain-parametric profile is baked at one rate and cannot self-correct. Compute the residual per §4.7; it is the ONE sanctioned place correction lives in GraphicEQ (§6). If Fs was skipped, or the bands already hit the target within ~0.5 dB, stay pure-parametric (flat GraphicEQ, no Fit Sample Rate stamp) — a valid profile, just rate-specific.
+
+**Existing room correction (impulse response):** if the user has an IR file (§1), emit a `Convolution: <path>` line (§8). Its response is already part of the chain, so build only the parametric correction the IR leaves behind — never re-correct what it already fixes — and fold its contribution into headroom (§7). Provenance `convolution`.
+
+**Channel balance:** a reported left/right pull (§1) is corrected with a small per-channel `Preamp:` on the LOUDER side only (attenuate the louder channel; never boost the quieter one — boosting eats headroom), typically ≤2 dB. Static placement/gear fix; a hearing-side imbalance goes to RUMBLE's Ear Calibration instead. Placement in §6/§8; skip ⇒ no trim.
 
 **Filter placement:**
 - One filter per real deviation; width-matched Q; ≤32/section.
@@ -163,15 +173,21 @@ recompute on any change
 ```
 BW_oct = (2/ln 2) * asinh( 1/(2*Q) )        Q = sqrt(2^BW) / (2^BW - 1)
 ```
+**4.7 GraphicEQ residual** (only for the rate-robust realisation, §3 — needs a stamped `# Fit Sample Rate:`):
+```
+residual(f) = target_correction(f) − realised_bands(f)   # on the GraphicEQ grid, evaluated at the stamped Fs
+```
+Write `residual(f)` as the GraphicEQ line (in place of flat) and stamp `# Fit Sample Rate: <Fs>`. Keep it gentle: if the residual exceeds a few dB anywhere, add or adjust a band so the bands carry the bulk and the residual only cleans up. Preamp (§4.5) is computed from the combined bands+residual curve exactly as always. A band and the residual must never both cover the same deviation (no double-correction, §6).
 
 ## 5. CONSOLIDATION
 Merge into ONE filter only if ALL: centres within 1/6 oct (~±6%) AND same sign AND Q ratio ≤~1.5× AND same type. Then `merged_gain=Σgains`; `merged_Fc`=gain-weighted geo-mean; `merged_Q` re-fit to summed width; record `components=`; recompute preamp. Else keep separate (separate is always safe).
 
 ## 6. GraphicEQ (dual role) + delay
-GraphicEQ jobs (correction never lives here):
+GraphicEQ jobs:
 - **A Freeform:** imported room curve / bespoke contour. Provenance room-measured/measured.
-- **B Tone layer (on request — the tone-control option, §1):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref. The only mode where a region carries both a filter (correction) and GEQ points (taste) — intentional.
-Rules: correction always in filters; GEQ may add preference and/or freeform on top; the same correction is never written twice; preference stays clamped to its §2 envelope tier; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if both A and B apply, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`); non-flat GEQ gets `# geq:` line(s) stating `layer=`.
+- **B Tone layer (on request — the tone-control option, §1):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref.
+- **C Rate-robust residual (§3/§4.7, only when `# Fit Sample Rate:` is stamped):** the leftover of the correction the PK bands don't capture. Provenance mirrors the correction it completes (measured/inferred). This is the ONE sanctioned place correction sits in GraphicEQ.
+Rules: correction normally lives in filters — the residual (C) is the sole exception, and a band and the residual never both cover the same deviation (no double-correction). Preference stays clamped to its §2 envelope tier; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if more than one of A/B/C applies, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points and `layer=`) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`).
 
 **Speaker delay (from the speaker-distance answer, §1):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
 ```
@@ -181,10 +197,17 @@ Channel: R
 Delay: 0 ms
 ```
 
+**Channel balance (from the balance answer, §1):** attenuate the LOUDER side with a per-channel `Preamp:` — never boost the quieter side. Like the delay blocks, this is a bare per-channel section after the main body (no filters, no GraphicEQ); if that channel already carries a delay block, put the trim in the same section. Typically ≤2 dB. Skip entirely if centered. E.g. the image pulls left (left louder) by a hair:
+```
+Channel: L
+Preamp: -1.5 dB
+```
+
 ## 7. SANITY CEILINGS (gear-derived — from the §2 headroom envelope, not constants)
 - **Boost ceilings come from the researched headroom envelope (§2)** and bind the *total* boost at each frequency (correction + preference + medical combined). Cap it at the device's clean limit there: where the gear takes less, the lower limit wins; where it takes more, you may exceed the generic backstop with a note. Never boost beyond clean excursion (esp. deep bass on a small/sealed/plugged transducer) — it adds distortion, not output; EQ the target down or suggest a subwoofer instead.
 - **The taste tier (strength answer × the §2 preference envelope) limits the preference layer only** — never correction or medical. (The headroom ceiling above limits every layer's boost; the taste tier *additionally* limits how far preference may colour.) It is a derived bound, not a constant: its value comes from documented preference research for the device class — or the audibility ladder when none exists — and its basis is recorded in `# preference_envelope:`. If the user asks why their taste move stopped at some dB, the answer is in that line, never "because the preset says so".
 - **Cuts don't stress the transducer**, so they aren't capability-bound — but a deep narrow cut (deeper than the measured null itself, or > ~−12 dB when there is no measurement) usually chases a room null EQ can't fill: flag, don't blindly apply.
+- **A Convolution IR is part of the chain but you can't analyse it by hand:** a `.wav` IR can carry its own gain, and you cannot compute its response from text. When a `Convolution:` line is present, add ~1 dB extra preamp margin, mark the preamp provisional, and tell the user to check for clipping (RUMBLE reads the IR and shows the true headroom in-app). Never assume the IR is unity.
 - **Fallback backstops — used only when §2 research came up empty:** absolute ±12 dB per single filter without a justified note (a guardrail, with a stated basis: a single move that size exceeds the documented preference spread plus typical correction magnitudes combined — needing it usually means chasing a null or redesigning the target, both of which deserve an explicit note); the audibility-anchored 2/4/6 dB taste tiers (§2). Last-resort floors, not targets.
 - **Fixed by design, not gear** (don't tie it to the chain): the digital anti-clip preamp margin (§4.5) — it protects signal headroom before the DAC, which is device-independent, and its 0.5/1.0 dB values are anchored to broadcast true-peak practice (~1 dBTP, EBU R128 / ATSC A/85), not chosen arbitrarily.
 
@@ -201,6 +224,7 @@ One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead 
 # Tags: <comma-separated, "/" hierarchy — see below>
 # Created: <YYYY-MM-DDTHH:MM:SS>
 # Modified: <YYYY-MM-DDTHH:MM:SS>
+# Fit Sample Rate: <Fs>              (ONLY when a rate-robust GraphicEQ residual is used — §3/§4.7; omit otherwise)
 # Created by RUMBLE — EQ Profile Manager for Equalizer APO
 #
 # ---- RUMBLE v2 METADATA (preserved verbatim) ----
@@ -222,24 +246,30 @@ One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead 
 # ========================
 
 Preamp: <-y.y> dB
+Convolution: <path to IR .wav>          # only if the user has an impulse-response file (§1); global (before any Channel), applies to the whole signal; omit otherwise
 Channel: L R
 Filter 1: ON <type> Fc <hz> Hz Gain <dB> dB Q <q>
 Filter N: ...
-GraphicEQ: 20 0; 20000 0
-Channel: L                                                       # only if the speaker-distance answer was asymmetric
-Delay: <t> ms
+GraphicEQ: 20 0; 20000 0                 # flat, OR a rate-robust residual / tone / freeform contour (§6)
+# --- optional per-channel trims after the main section (§6); include only the lines that apply, drop the section if none ---
+Channel: L
+Preamp: -1.5 dB                          # balance: attenuate the LOUDER side only; omit if centered
+Delay: 1.5 ms                            # speaker asymmetry: delay the NEARER side; omit if equal
 Channel: R
-Delay: 0 ms
+Delay: 0 ms                              # only present when a Delay is used above
 ```
 **Notes:**
 - **Never emit a `LoudnessCorrection:` line.** Quiet/background listeners (the volume answer, §1) are served by RUMBLE's own Loudness feature (Settings) — a volume-linked ISO 226 implementation that tracks the actual playback level, which a static config line cannot; emitting both would double-compensate the same deficit. Recommend enabling it in the plain-language summary instead.
-- First six `#` lines = canonical header (keep exact form/order). Don't emit `# Readonly:`/`# Builtin:` (app-managed). Dates ISO. The v2 block carries chain/source_mode/target_curve/status/fs/headroom/preamp_basis (no app header field for these) and is the round-trip source of truth.
+- Canonical header = the `# RUMBLE Profile:`/`# Description:`/`# Tags:`/`# Created:`/`# Modified:`/`# Created by RUMBLE` lines in that order, with `# Fit Sample Rate: <Fs>` inserted just before the `# Created by RUMBLE` line ONLY when a rate-robust residual is used (§3). Don't emit `# Readonly:`/`# Builtin:` (app-managed). Dates ISO. The v2 block carries chain/source_mode/target_curve/status/intent/fs/headroom/preference_envelope/preamp_basis (no app header field for these) and is the round-trip source of truth.
+- **Convolution (only if the user has an IR file):** `Convolution: <path>` as a global line BEFORE the first `Channel:` line — whole-signal room correction applies to every channel, and this is where RUMBLE stores it (place it after `Channel:` and the app relocates it on re-save). Use the path the user gives; if only a filename is known, use that and tell them to place the `.wav` where RUMBLE/APO can find it. Fold it into headroom per §7 (provisional preamp + clip check). Provenance `convolution`.
+- **Channel balance (only if a pull was reported):** a per-channel `Preamp:` attenuating the louder side, in a bare per-channel section after the main body (§6). Never boost the quieter side. Omit entirely if centered.
+- **Surface these hand-offs in the plain-language summary when flagged (they are app features, never profile content):** RUMBLE's Ear Calibration for a between-ears hearing difference; Crossfeed for in-head/hard-panned headphone fatigue; the bass-management tool for a separate subwoofer; the Loudness feature for quiet/background listening.
 - `Channel:` default stereo `L R`; mono `all` only if explicit. **Surround channel names (APO):** stereo `L R`; 5.1 `L R C LFE RL RR` (some devices report `SL SR` instead of `RL RR` — match what RUMBLE's channel preset/status bar shows); 7.1 `L R C LFE RL RR SL SR`. Surround rules: apply the correction to the main channels (one `Channel: L R C RL RR SL SR` style section, or `all` when genuinely uniform); **never apply full-range EQ or boosts to `LFE`** (it is band-limited by content and drivers — a full-range boost there only adds distortion); bass redirection/crossovers/sub feeds belong to RUMBLE's bass-management tool, not to this profile. `Device:` optional, normally omitted (never auto-`all`).
 - Filter line: `Filter n: ON|OFF <type> Fc <hz> Hz Gain <dB> dB Q <q>` (or `BW Oct <v>`, convertible via §4.6). **≤32 per section** (app cap; default 10).
 - Types accepted: PK, LSC/HSC, LS/HS, LS/HS 6dB|12dB, LP/HP/LPQ/HPQ/BP, NO, AP, PEQ, Modal, IIR. RUMBLE normally emits PK/LSC/HSC, occasionally NO/LP/HP.
 - `Delay: <t> ms` (or samples, relative to the device's actual sample rate — shown in RUMBLE's status bar; Settings → auto/manual, not always 48 kHz) in bare per-channel blocks after the main section (§6). `GraphicEQ:` always present — exactly one per EQ section, none in delay-only blocks.
 
-**Provenance set:** `measured · room-measured · manufacturer · inferred · user-pref · medical · consolidated`.
+**Provenance set:** `measured · room-measured · manufacturer · inferred · user-pref · medical · consolidated · convolution`.
 
 **Tags:** `/` within a tag, `, ` between; never a comma inside a hierarchy; **`/` only for genuine parent→child nesting (Brand→Model), never to list sibling traits** (wrong: `Character / Punchy / Warm` → right: `Character / Warm`, or two separate tags); capitalise each component; chars = letters(incl UTF-8)/digits/space/`-`/`.`/`&` (not `,` or `/`); 2–4 tags; first component = category (Music, Situation, Character, Equipment, Pads, Chain, Connection, Speakers, Headphones…); single-word tags ok (Reference, Flat). E.g. `Headphones / <Brand> / <Model>, Pads / <Brand> / <Type>, Connection / 4.4mm Balanced, Character / Warm`.
 
@@ -257,11 +287,15 @@ Delay: 0 ms
 - [ ] Correction only in filters; not duplicated in filter+GEQ (preference-on-top only in tone-layer mode); exactly one GraphicEQ line per EQ section.
 - [ ] Preamp from combined filters+GEQ at the recorded Fs; correct margin (0.5, or 1.0 on >~6 dB combined boost or 3+ boosts >=4 dB); recomputed last.
 - [ ] `# fs:` recorded with its basis; every §4 number computed at that rate; near-Nyquist filters re-checked when Fs is not 48000.
+- [ ] Rate-robust residual (if used): `# Fit Sample Rate:` stamped; residual = target − realised bands on the grid at that Fs (§4.7); no deviation covered by both a band and the residual; residual kept gentle. Otherwise flat GraphicEQ, no stamp.
 - [ ] Headroom envelope researched (§2) and recorded in `# headroom:`; total boost capped to it; deep-null cuts flagged.
 - [ ] Every filter + non-flat GEQ has rationale (layer + provenance).
 - [ ] Canonical header ahead of v2 block; tags valid; channel default stereo L R; locked to chain/mode/pads-port.
 - [ ] Surround: correction on mains only; no full-range EQ/boost on LFE; routing deferred to RUMBLE's bass management.
 - [ ] Delay blocks (if any) are bare per-channel sections after the main section; no filters/GEQ inside them.
+- [ ] Channel balance (if a pull was reported): per-channel `Preamp:` attenuates the louder side only, in a per-channel section after the main body; centered/skipped ⇒ none.
+- [ ] Convolution (if the user has an IR): `Convolution:` line emitted after the first Channel, correction not double-applied over what the IR fixes, headroom treated provisionally (+~1 dB margin, clip check).
+- [ ] Hand-offs surfaced in the summary where flagged: Ear Calibration (between-ears hearing difference), Crossfeed (in-head headphone fatigue), bass management (subwoofer), Loudness (quiet listening).
 - [ ] No `LoudnessCorrection:` line anywhere (quiet listeners pointed at RUMBLE's Loudness feature in the summary instead).
 - [ ] UTF-8; body numbers ASCII `-` and digits (no Unicode `−`).
 - [ ] Speakers w/o in-room measurement ⇒ status provisional.
@@ -271,14 +305,14 @@ Delay: 0 ms
 - [ ] User given a plain check (clip/A-B/re-measure, §13).
 
 ## 10. FLOW (skeleton)
-1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, source, DAC/amp+mode, measurement?, sample rate?, channels, use, genres, then the taste layer together (character/fidelity, F1/F3/F4/F6, strength), then medical, volume, tone-control?.
+1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, subwoofer?, source, DAC/amp+mode, measurement?, IR file?, sample rate?, channels, balance?, use, genres, then the taste layer together (character/fidelity, F1/F3/F4/F6, strength), then medical, volume, tone-control?, headphone spatial-fatigue?. Every added item is skippable to a value-neutral default; harvest (§0) skips any already implied.
 2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom and preference envelopes (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class + character.
 4. correction (inverse deviations, or fit measurement §11) + clamped preference = total.
 5. Medical caps last; cap total boost to the headroom envelope (§7).
 6. Realise as filters at the recorded Fs; consolidate (tone-control ⇒ preference into GEQ §6).
 7. Preamp from combined curve (§4.5).
-8. Emit file (§8); add Delay blocks if asymmetric (§6). Run §9. Summarise plainly.
+8. Emit file (§8): Convolution if an IR was given; rate-robust residual + Fit Sample Rate if Fs is known and warranted; per-channel Preamp trim if a balance pull; Delay blocks if asymmetric (§6). Run §9. Summarise plainly, surfacing any flagged hand-offs (Ear Calibration, Crossfeed, bass management, Loudness).
 
 **Loading (RUMBLE):** import the file in RUMBLE (Import in the app, or drop the `.txt` into the profile library) and activate it — RUMBLE manages Equalizer APO's config itself; never hand-edit APO's `config` folder alongside it. Keep the Preamp line. Only one EQ stage active — source "enhancements", amp tone/loudness and onboard EQ all off. RUMBLE's own optional render layers (Loudness, tone trim, crossfeed, listener correction) compose on top of this profile at render time by design — that is fine and not a second EQ stage.
 
@@ -295,6 +329,7 @@ Fit correction to the measurement (provenance room-measured/measured; status fin
 **IEM:** IEM target (§3); ~8 kHz coupler peak = rig artifact, don't cut unless the user reports sharpness; insertion depth/tip shifts treble — valid only for the fit used; no room.
 **Over-ear:** correction tied to pad/seal — a pad swap/broken seal changes it; lock to the pad variant. DF baseline depends on the rig — keep target rig-compatible, else prefer inverse-of-known-deviations.
 **Speakers/rooms:** placement first (toe-in, tweeter at ear height, wall distance), then measure at the seat, then EQ. Missing sub-bass ⇒ add a subwoofer (~60–80 Hz), not over-boost; level-match; multiple subs smooth modes. **Sub/mains routing, crossovers and distance delays: use RUMBLE's bass-management tool (Tools menu) — it generates the crossover filters, summed sub feed and per-channel delays as reviewable profile content; don't hand-build routing in this profile.** The delay tool here (§6) covers plain L/R seat asymmetry only. Active/DSP speakers may self-correct — don't double-correct.
+**Headphones/IEM spatial fatigue:** if hard-panned stereo feels in-head or unnaturally split, that is a soundstage issue EQ doesn't fix — recommend RUMBLE's Crossfeed feature (a render layer of cited crossfeed circuits), never build it into the profile.
 **All:** exactly one EQ stage — source "enhancements", amp tone/loudness, onboard EQ all off (RUMBLE's own render layers excepted, §10).
 
 ## 13. VERIFY
