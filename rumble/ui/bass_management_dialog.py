@@ -15,8 +15,8 @@ reuse it without a live EditorPanel instance).
 Page flow: layout confirm -> crossover -> alignment -> trims -> distances ->
 preview (live ``manager.preview_config()``) -> Apply, which emits
 ``apply_requested(profile_id, ProfileConfig)`` for MainWindow to load into
-the editor as a dirty, unsaved change (mirrors ``_on_bake_tone_trim``/
-``_on_insert_crossfeed`` -- the dialog itself never touches editor_panel).
+the editor as a dirty, unsaved change (mirrors ``_on_bake_tone_trim`` --
+the dialog itself never touches editor_panel).
 
 "Use measured distances" (the roadmap's D3 "later synergy" note) is NOT
 wired in this session. Per the S23 -> S24 Amendment: this wizard has no

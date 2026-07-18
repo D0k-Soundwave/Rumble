@@ -379,7 +379,6 @@ class SettingsDialog(FramelessDialog):
     abx_requested = Signal()                # Launch Blind A/B/X — handled by the main window
     hearing_test_requested = Signal()       # Launch Ear Calibration — handled by the main window
     play_reference_sound_requested = Signal(str)  # Ear Calibration "check your volume" sample buttons — main window plays hearing_test.REFERENCE_SOUNDS[key] (or "" for the bracketed voice clip)
-    insert_crossfeed_requested = Signal()   # "Insert into profile…" — handled by the main window
 
     # Custom exec() result: an interface-size button was clicked, so the whole
     # UI (this dialog included) must be rebuilt at the new size right now. The
@@ -789,19 +788,13 @@ class SettingsDialog(FramelessDialog):
 
         # Crossfeed
         cf = _Card(
-            "Default crossfeed (headphones)",
-            "The crossfeed used for any profile that doesn't set its own (each "
-            "profile can override this in the editor). Attenuated, delayed, "
-            "low-pass cross-mix so hard-panned headphone content stops sounding "
-            "like it's inside your skull.")
-        self.chk_crossfeed_enabled = QCheckBox("Enable crossfeed")
-        self.chk_crossfeed_enabled.setChecked(bool(self._working.get("crossfeed_enabled", False)))
-        self.chk_crossfeed_enabled.toggled.connect(self._schedule_apply)
-        describe(self.chk_crossfeed_enabled, "Enable crossfeed",
-                 "Mix a low-passed, attenuated, delayed copy of each channel "
-                 "into the other so hard-panned headphone content sounds "
-                 "more natural. Only takes effect on a plain stereo profile.")
-        cf.add(self.chk_crossfeed_enabled)
+            "Global crossfeed value",
+            "The crossfeed used for any profile that doesn't set its own, and "
+            "for every profile when the main-window Crossfeed switch is set to "
+            "Global. That switch decides WHEN this value applies (Off / Per "
+            "profile / Global); this card only sets the value itself. "
+            "Attenuated, delayed, low-pass cross-mix so hard-panned headphone "
+            "content stops sounding like it's inside your skull.")
 
         def _hideable_row(label_text: str, *widgets: QWidget) -> list[QWidget]:
             """A labelled control row, like _Card.add_row(), but keeping
@@ -900,21 +893,9 @@ class SettingsDialog(FramelessDialog):
         custom_widgets += _hideable_row("Delay:", self.spin_crossfeed_custom_delay)
         self._crossfeed_custom_widgets = tuple(custom_widgets)
 
-        self.btn_insert_crossfeed = QPushButton("Insert into profile…")
-        self.btn_insert_crossfeed.clicked.connect(self.insert_crossfeed_requested)
-        describe(self.btn_insert_crossfeed, "Insert crossfeed into profile",
-                 "Write the current crossfeed preset and strength into the "
-                 "active profile as real, portable config text, then turn "
-                 "off this machine-level setting so it isn't applied twice. "
-                 "Refused while there are unsaved editor changes.")
-        insert_row = QHBoxLayout()
-        insert_row.addWidget(self.btn_insert_crossfeed)
-        insert_row.addStretch(1)
-        cf.add_layout(insert_row)
-
         self._crossfeed_controls = (
-            self.chk_crossfeed_enabled, self.combo_crossfeed_preset,
-            self.slider_crossfeed_strength, self.btn_insert_crossfeed,
+            self.combo_crossfeed_preset,
+            self.slider_crossfeed_strength,
             self.spin_crossfeed_custom_gain, self.spin_crossfeed_custom_freq,
             self.spin_crossfeed_custom_delay,
         )
@@ -974,15 +955,6 @@ class SettingsDialog(FramelessDialog):
         for control in self._crossfeed_controls:
             control.setEnabled(is_stereo)
         self.lbl_crossfeed_nonstereo.setVisible(not is_stereo)
-
-    def note_crossfeed_inserted(self) -> None:
-        """Called by the main window after insert_crossfeed_requested is
-        handled: the machine-level toggle is turned off (the block now
-        lives in the profile's own text instead, avoiding a double-apply at
-        render time), so reflect that here without needing the dialog
-        reopened -- same pattern as note_loudness_reference_calibrated()."""
-        self._working["crossfeed_enabled"] = False
-        self.chk_crossfeed_enabled.setChecked(False)
 
     def _refresh_iso226_unit_label(self) -> None:
         """Swap the Reference listening level spin box's suffix (and its
@@ -2117,7 +2089,6 @@ class SettingsDialog(FramelessDialog):
         self._working["warn_unsaved_changes"] = self.chk_warn_unsaved.isChecked()
         self._working["iso226_loudness_enabled"] = self.chk_iso226_enabled.isChecked()
         self._working["iso226_reference_phon"] = self.spin_iso226_phon.value()
-        self._working["crossfeed_enabled"] = self.chk_crossfeed_enabled.isChecked()
         self._working["crossfeed_preset"] = str(
             self.combo_crossfeed_preset.currentData() or crossfeed.DEFAULT_PRESET)
         self._working["crossfeed_strength"] = self.slider_crossfeed_strength.value()

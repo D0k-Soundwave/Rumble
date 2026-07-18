@@ -949,52 +949,6 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(
             f"Tone trim baked into '{active.name}' — click Save to apply", 4000)
 
-    def _on_insert_crossfeed(self, dialog: SettingsDialog) -> None:
-        # "Insert into profile...": writes the current machine-level
-        # crossfeed settings into the ACTIVE profile's editor state as real,
-        # portable APO text (ProfileManager.insert_crossfeed_into_config()),
-        # then turns the machine-level setting off so it isn't applied
-        # twice (the profile's own text plus the settings-level render
-        # layer) -- same shape and reasoning as _on_bake_tone_trim's own
-        # reset. Refuses on a dirty editor, same tone as that refusal.
-        if self._dirty:
-            QMessageBox.information(
-                self, "Insert Into Profile",
-                "Save or discard the unsaved changes before inserting "
-                "crossfeed into a profile.")
-            return
-        active = self.manager.get_active_profile()
-        if active is None:
-            QMessageBox.information(
-                self, "Insert Into Profile", "No active profile to insert crossfeed into.")
-            return
-        config = self.manager.load_profile_config(active.id)
-        if config is None:
-            return
-        inserted = self.manager.insert_crossfeed_into_config(config)
-        if inserted is config:
-            QMessageBox.information(
-                self, "Insert Into Profile",
-                "Crossfeed is off, at zero strength, or the active profile "
-                "isn't plain stereo -- nothing to insert.")
-            return
-        self.manager.settings["crossfeed_enabled"] = False
-        self.manager.save()
-        self.editor_panel.load_profile(
-            active, inserted, is_active=True, is_bypassed=self.manager.is_bypassed(),
-            is_readonly=active.protected)
-        self.editor_panel.refresh_listener_overlay()
-        self._loaded_profile_id = active.id
-        self._dirty = True
-        self._preview_diverged = True
-        self._schedule_live_preview()
-        self.tray_icon.set_crossfeed_state(False)
-        dialog.note_crossfeed_inserted()
-        self.profile_panel.select_profile(active.id)
-        self._update_status_bar()
-        self.statusBar().showMessage(
-            f"Crossfeed inserted into '{active.name}' — click Save to apply", 4000)
-
     def _open_auto_switch_dialog(self) -> None:
         # Pre-fill the app-match combo with whatever the watcher has most
         # recently observed playing, so the user can pick from real apps
@@ -1128,7 +1082,7 @@ class MainWindow(QMainWindow):
         dialog.exec()
 
     def _on_apply_bass_management(self, profile_id: str, config: ProfileConfig) -> None:
-        # Mirrors _on_bake_tone_trim/_on_insert_crossfeed's shape exactly:
+        # Mirrors _on_bake_tone_trim's shape exactly:
         # load the generated content into the editor as a dirty, unsaved
         # change through the normal save flow, rather than writing a new
         # profile file directly.
@@ -1901,7 +1855,6 @@ class MainWindow(QMainWindow):
         dialog.abx_requested.connect(self._open_abx_dialog)
         dialog.hearing_test_requested.connect(self._open_hearing_dialog)
         dialog.play_reference_sound_requested.connect(self._on_play_reference_sound)
-        dialog.insert_crossfeed_requested.connect(lambda: self._on_insert_crossfeed(dialog))
         # The dialog has no Save button: it emits this as each control is
         # touched, so settings apply and persist as they are changed.
         dialog.settings_saved.connect(self._apply_settings_live)

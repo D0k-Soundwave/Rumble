@@ -2196,45 +2196,6 @@ class ProfileManager:
             "# leading Stage: capture line so they never apply to playback.\n\n"
             + "\n".join(blocks))
 
-    def insert_crossfeed_into_config(
-            self, config: "apo_config.ProfileConfig") -> "apo_config.ProfileConfig":
-        """Writes the CURRENT machine-level crossfeed settings (preset,
-        strength, and any mode-specific settings crossfeed.render_block()
-        reads for "custom") into *config* as real, portable APO
-        text -- the "Insert into profile..." escape hatch (roadmap B2), same
-        shape as bake_session_trim()'s (B1) escape hatch. Appended to
-        config.extra_lines rather than composed through ProfileConfig's
-        structured fields, because the block is self-contained (its own
-        Copy:/Channel:/Copy: structure, independent of config's own
-        channel_sections) and apo_config.render_config_body() always renders
-        extra_lines last/verbatim -- exactly the position the block needs
-        (KB §17.4's finding, reused here for the storage path instead of the
-        render-only path _render_crossfeed_block() uses). Returns *config*
-        itself unchanged (identity, not a copy) when crossfeed is off, at
-        zero strength, or the layout isn't stereo-only -- nothing meaningful
-        to insert, so the caller can tell "nothing happened" from an
-        `is` check.
-
-        (Legacy escape hatch from the machine-level-crossfeed era; superseded
-        by per-profile crossfeed metadata and removed with the settings-dialog
-        UI rework. Reads the old global settings directly here so it stays
-        self-contained until then.)"""
-        mode = self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)
-        active = bool(self.settings.get("crossfeed_enabled")) and (
-            mode == "custom" or float(self.settings.get("crossfeed_strength", 0)) > 0.0)
-        if not active:
-            return config
-        if not crossfeed.can_crossfeed(config.channel_sections):
-            return config
-        block = crossfeed.render_block(
-            self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET),
-            float(self.settings.get("crossfeed_strength", 100)),
-            self.settings)
-        if not block:
-            return config
-        new_lines = list(config.extra_lines) + block.rstrip("\n").split("\n")
-        return replace(config, extra_lines=new_lines)
-
     # ── activation / bypass ──────────────────────────────────────────
 
     def _write_active_pointer(self, meta: ProfileMeta | None) -> None:
