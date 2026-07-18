@@ -1,6 +1,6 @@
 # RUMBLE — Minimal Prompt (Generalised · for small / local models)
 
-Paste this into a small or local AI. It builds a **generalised** Equalizer APO profile from what the user likes — **no internet, no measurements, no heavy maths**. It is preference-based, not device-accurate. For precise per-device correction, use the full RUMBLE prompt instead.
+Paste this into a small or local AI. It builds a **generalised** RUMBLE (Equalizer APO) profile from what the user likes — **no internet, no measurements, no heavy maths**. It is preference-based, not device-accurate. For precise per-device correction, use the full RUMBLE prompt instead.
 
 ## Rules
 - **Use what the user already said first.** Read the whole conversation, treat anything they've already stated as answered, and only ask what's still missing — never re-ask.
@@ -41,7 +41,7 @@ Use only these types: `LSC`, `HSC`, `PK`. List filters low-to-high frequency, nu
 
 ## Preamp & output
 - **Preamp** = −(largest positive gain + 1.0) dB; if no gain is positive, `0.0`. (The +1.0 covers leftover overlap between filters at different frequencies; the combining rules above handle the close ones.)
-- **Quiet/background listener (question 7)?** → add one extra line after `Preamp:`: `LoudnessCorrection: State 1 ReferenceLevel 0 ReferenceOffset 0` (compensates for quiet-volume hearing; omit entirely otherwise). If they use the RUMBLE app itself, skip this line and tell them to turn on the app's Loudness feature in Settings instead — using both would double the effect.
+- **Quiet/background listener (question 7)?** → do NOT add any extra config line for it; after the file, tell them to turn on the Loudness feature in RUMBLE's Settings (it compensates for quiet-volume hearing automatically, tracking the real volume as it changes).
 - Stereo → `Channel: L R`. Use `all` only if the user says mono.
 - **Tags:** 2–4, separated by `, `; use `/` only for Brand→Model nesting, never to list traits (wrong: `Character / Warm / Punchy`); capitalise each part.
 - Save the file as **UTF-8**; every number in the body uses plain digits, `.`, and the normal ASCII minus `-` — never any other dash or sign character.
