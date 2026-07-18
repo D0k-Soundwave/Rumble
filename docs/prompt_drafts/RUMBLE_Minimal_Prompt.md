@@ -14,13 +14,13 @@ Paste this into a small or local AI. It builds a RUMBLE (Equalizer APO) profile 
 Order runs general → specific: the broad questions come first so their answers narrow or settle the specific ones (someone who says "warmer" has already leaned the bass up — confirm rather than re-ask).
 1. "Headphones, earphones, or speakers?"
 2. "What make and model? (Fine to skip.)" *(headphones/earphones + internet access → AutoEq lookup; otherwise name/tags only)*
-3. "Overall warmer, brighter, or balanced?"
+3. "Overall warmer, brighter, balanced — or just faithful to the recording?" *(faithful: with internet + a named model ⇒ AutoEq correction alone, no taste filters; offline ⇒ the fidelity rule above)*
 4. "More bass, less bass, or about right?"
 5. "Are voices clear and up-front, or distant — want more clarity?"
 6. "Does anything sound harsh or piercing — sharp 's'/cymbals, shouty middle, or boomy bass?"
 7. "Gentle, moderate, or strong change?"
 8. "Do you usually listen quietly (background level), or at normal/loud volume?"
-9. *(optional)* "Any hearing notes — ringing in the ears, hearing loss, or sound tiring you out?"
+9. *(optional)* "Any hearing notes — ringing in the ears, trouble following speech in noise, hearing loss, or sound tiring you out?"
 
 ## Turn answers into filters (fixed frequencies, small gains)
 **If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published — the taste filters below are added AFTER them.** No data → the taste filters below are the whole profile.
@@ -41,7 +41,8 @@ Taste filters use only these types: `LSC`, `HSC`, `PK` (AutoEq's published filte
 
 ## Hearing notes (apply LAST — they override the above)
 - **Ringing / tinnitus** → no boosts in the very-high (≥8 kHz) or very-low (≤125 Hz) regions; keep them at or below 0.
-- **Hearing loss** → small lift (+2 to +3) in the affected range only.
+- **Speech-in-noise trouble** → small lift (+1 to +2) around 2–4 kHz (helps consonant clarity; combines with any vocal-clarity lift rather than stacking on top).
+- **Hearing loss** → small lift (+2 to +4) in the affected range only.
 - **Fatigue** → no boosts in the tiring range; a gentle cut if needed.
 
 ## Preamp & output
@@ -65,4 +66,4 @@ Filter 1: ON <type> Fc <hz> Hz Gain <x.x> dB Q <q>
 Filter 2: ON <type> Fc <hz> Hz Gain <x.x> dB Q <q>
 GraphicEQ: 20 0; 20000 0
 ```
-Then one plain sentence: what you changed and why. If it's built on AutoEq data, say the correction comes from real measurements of their model; if it's answers-only, tell the user it's a general starting point they can tweak to taste.
+Then one plain sentence: what you changed and why. If it's built on AutoEq data, say the correction comes from real measurements of their model; if it's answers-only, tell the user it's a general starting point they can tweak to taste. Finally, tell them how to use it: import the file into RUMBLE (Import in the app, or drop the `.txt` into the profile library) and activate it.
