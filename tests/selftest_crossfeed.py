@@ -153,8 +153,8 @@ def test_custom_mode_uses_settings_gain_freq_delay():
 
 def test_custom_mode_ignores_the_strength_argument():
     # Custom always renders its own exact figures -- the *strength* argument
-    # passed through the dispatch is irrelevant to it (only crossfeed_enabled
-    # gates it upstream in ProfileManager).
+    # passed through the dispatch is irrelevant to it (only the crossfeed_mode
+    # source setting gates it upstream in ProfileManager).
     settings = {"crossfeed_custom_gain_db": -5.0}
     assert crossfeed.render_block("custom", 0.0, settings) == \
         crossfeed.render_block("custom", 100.0, settings)
@@ -393,6 +393,31 @@ def _active_render(mgr) -> str:
     if "rumble_listener_active.txt" in pointer:
         return (mgr.rumble_dir / "rumble_listener_active.txt").read_text(encoding="utf-8")
     return pointer
+
+
+def test_default_settings_render_only_explicit_per_profile_crossfeed():
+    # Out of the box (DEFAULT_SETTINGS: mode "profile", global strength 0) a
+    # profile with no crossfeed of its own renders nothing, but one that DOES
+    # carry a spec applies it immediately -- crossfeed stays opt-in without
+    # burying the per-profile feature behind a switch the user must find.
+    from rumble.core.profile_manager import DEFAULT_SETTINGS
+    with tempfile.TemporaryDirectory() as tmp:
+        mgr = _manager(tmp)
+        mgr.ensure_first_run()
+        mgr.settings.clear()
+        mgr.settings.update(DEFAULT_SETTINGS)
+        cfg = _stereo_config()
+        plain = mgr.create_profile("Plain", config=cfg)
+        spatial = mgr.create_profile("Spatial", config=cfg)
+        spatial.crossfeed = crossfeed.CrossfeedSpec(preset="meier", strength=90)
+        mgr._write_profile_file(spatial, cfg)
+
+        mgr.activate_profile(plain.id)
+        assert "XL" not in (mgr.config_path / "rumble_active.txt").read_text(encoding="utf-8")
+
+        mgr.activate_profile(spatial.id)
+        active = (mgr.rumble_dir / "rumble_listener_active.txt").read_text(encoding="utf-8")
+        assert "Channel: XL XR" in active
 
 
 def test_crossfeed_mode_off_profile_global():

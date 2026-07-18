@@ -449,8 +449,13 @@ DEFAULT_SETTINGS: dict = {
     "crossfeed_mode": "profile",
     # The GLOBAL crossfeed value (preset/strength/custom), used by the
     # "profile" fallback and the "global" override above. Edited in Settings.
+    # Strength defaults to 0 (inert): out of the box the "profile" mode above
+    # renders each profile's OWN crossfeed and nothing for un-set profiles --
+    # crossfeed stays the opt-in, taste/positioning effect it always was,
+    # while a per-profile selection still applies immediately. Raising this
+    # value in Settings is what opts a machine into a global fallback/override.
     "crossfeed_preset": crossfeed.DEFAULT_PRESET,
-    "crossfeed_strength": 100,
+    "crossfeed_strength": 0,
     # "custom" preset mode: user-set gain/freq/delay instead of a named
     # circuit (crossfeed.render_block()'s "custom" branch). Defaults mirror
     # the CHU_MOY/LINKWITZ figures so a first-time switch to Custom starts

@@ -99,7 +99,7 @@ def main() -> int:
         "iso226_reference_volume_db": -10.0,
         "apo_coverage_dismissed_guids": ["{some-endpoint-guid}"],
         "profile_loudness_matching": True,
-        "crossfeed_enabled": True,
+        "crossfeed_mode": "global",
         "crossfeed_preset": "chumoy",
         "crossfeed_strength": 65,
         "crossfeed_custom_gain_db": -11.5,

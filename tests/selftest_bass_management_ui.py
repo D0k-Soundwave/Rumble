@@ -8,7 +8,7 @@ preset combo uses); a full offscreen page walk through the wizard (layout
 confirm -> crossover -> alignment -> trims -> distances -> preview); Apply
 marks the editor dirty with the generated bass-management sections (crossover
 filters, LFE summed-feed Copy: line, trims, distance-derived delays) through
-the normal dirty/save flow, mirroring _on_bake_tone_trim/_on_insert_crossfeed;
+the normal dirty/save flow, mirroring _on_bake_tone_trim;
 the wizard's live preview (started on reaching the preview page) restores on
 Cancel; a defensive fallback when constructed against a non-sub/LFE profile.
 

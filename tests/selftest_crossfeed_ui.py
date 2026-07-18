@@ -1,21 +1,20 @@
-"""Selftest: S8 (B2-ui) crossfeed controls -- Settings -> Listeners section,
-the tray/toast quick toggle, and "Insert into profile..." (offscreen Qt,
-real widgets -- no mocks of SettingsDialog/ProfileManager/MainWindow).
+"""Selftest: crossfeed UI -- the editor's per-profile crossfeed control, the
+main-window Off / Per profile / Global source switch, the Settings dialog's
+global-value editor, and the tray/toast quick toggle (offscreen Qt, real
+widgets -- no mocks of SettingsDialog/ProfileManager/MainWindow).
 
-Covers: the Settings section prefills from and round-trips into the working
-settings dict on apply, mirroring the ISO 226 section's own pattern; a
-non-stereo active profile soft-disables the controls (values kept, not
-reset) while a stereo one leaves them enabled; toggling enable/preset/
-strength through the dialog and applying the saved settings to a real
-ProfileManager triggers a live re-render whose active-pointer output
-actually carries (or omits) the crossfeed block; the tray/toast quick
-toggle persists the setting immediately and re-renders live, staying in
-sync with the Settings dialog; "Insert into profile..." writes the
-rendered block into the active profile's editor state as real, portable
-text and turns the machine-level setting off (so it isn't applied twice),
-refusing on a dirty editor. Settings-file persistence of the three plain
-settings keys themselves is already covered end-to-end by
-selftest_settings_persist.py's crossfeed override block (added in S7).
+Covers: the editor's per-profile crossfeed control reflects the loaded
+profile, marks dirty on edit and rebuilds its spec, and soft-disables on a
+non-stereo layout; the main-UI source switch drives crossfeed_mode so each of
+its three states (off / profile / global) produces the expected live re-render
+of the active pointer, and stays in sync with the tray toggle; the Settings
+card is now purely the GLOBAL crossfeed value (preset/strength/custom, no
+enable checkbox and no "Insert into profile" button) and its value reaches a
+live re-render when the mode selects it; the tray quick toggle flips
+crossfeed_mode between off and the last non-off mode, persists immediately, and
+keeps the editor switch in sync. Settings-file persistence of the plain keys is
+covered by selftest_settings_persist.py; the three render modes at the manager
+level are covered by selftest_crossfeed.py.
 
 Run:  python tests/selftest_crossfeed_ui.py
 Uses Qt's offscreen platform plugin -- no window is shown.
@@ -32,7 +31,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QMessageBox
+from PySide6.QtWidgets import QApplication
 
 app = QApplication.instance() or QApplication([])
 
@@ -44,7 +43,6 @@ from rumble.core.profile_manager import (
 )
 from rumble.ui.main_window import MainWindow
 from rumble.ui.editor_panel import EditorPanel
-from rumble.ui.theme.tokens import THEMES, DEFAULT_THEME_NAME
 from rumble.core import apo_config
 from rumble.ui.settings_dialog import SettingsDialog
 from rumble.ui.theme.theme_engine import ThemeEngine
@@ -73,13 +71,11 @@ def tmp_data_dir() -> Path:
 
 def active_pointer_text(manager: ProfileManager) -> str:
     # The canonical pointer either includes the stored profile file directly
-    # (no render layer active, crossfeed included -- the listener scratch
-    # file is left untouched/stale in that case, see
-    # ProfileManager._write_active_pointer()) or routes through the
-    # listener-corrected scratch file that actually carries the composed
-    # body. Follow the pointer rather than assuming the scratch file is
-    # current, so a transition back to "nothing active" isn't misread as
-    # still carrying stale crossfeed content.
+    # (no render layer active -- the listener scratch file is left
+    # untouched/stale in that case) or routes through the listener-corrected
+    # scratch file that actually carries the composed body. Follow the pointer
+    # rather than assuming the scratch file is current, so a transition back to
+    # "nothing active" isn't misread as still carrying stale crossfeed content.
     pointer_path = manager.config_path / ACTIVE_POINTER_FILENAME
     pointer_text = pointer_path.read_text(encoding="utf-8") if pointer_path.exists() else ""
     if LISTENER_ACTIVE_FILENAME not in pointer_text:
@@ -106,290 +102,13 @@ def make_window():
     return manager, w
 
 
-# ── prefill / round trip through the dialog ─────────────────────────────
-
-def prefill_matches_defaults() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
-    expect(dlg.chk_crossfeed_enabled.isChecked() is False, "off by default")
-    expect(dlg.combo_crossfeed_preset.currentData() == crossfeed.DEFAULT_PRESET,
-           "preset combo defaults to crossfeed.DEFAULT_PRESET")
-    expect(dlg.slider_crossfeed_strength.value() == 100, "strength slider defaults to 100")
-    expect(dlg.lbl_crossfeed_strength.text() == "100%", "value label mirrors the slider")
-
-
-def save_round_trips_all_three_keys() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
-    dlg.chk_crossfeed_enabled.setChecked(True)
-    idx = dlg.combo_crossfeed_preset.findData("chumoy")
-    dlg.combo_crossfeed_preset.setCurrentIndex(idx)
-    dlg.slider_crossfeed_strength.setValue(65)
-    expect(dlg.lbl_crossfeed_strength.text() == "65%", "value label follows a manual slider change")
-
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    expect(emitted[0]["crossfeed_enabled"] is True, "enabled flag saved")
-    expect(emitted[0]["crossfeed_preset"] == "chumoy", "preset saved")
-    expect(emitted[0]["crossfeed_strength"] == 65, "strength saved")
-
-
-def combo_offers_all_six_modes() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
-    keys = [dlg.combo_crossfeed_preset.itemData(i)
-            for i in range(dlg.combo_crossfeed_preset.count())]
-    expect(keys == ["chumoy", "meier", "linkwitz", "bauer", "direct", "custom"],
-           f"unexpected preset combo contents: {keys!r}")
-
-
-def mode_switch_shows_only_the_matching_control_group() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
-
-    def select(key: str) -> None:
-        idx = dlg.combo_crossfeed_preset.findData(key)
-        dlg.combo_crossfeed_preset.setCurrentIndex(idx)
-
-    select("chumoy")
-    expect(not dlg.slider_crossfeed_strength.isHidden(), "Strength shown for a named preset")
-    expect(dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls hidden for a named preset")
-
-    select("custom")
-    expect(dlg.slider_crossfeed_strength.isHidden(), "Strength hidden for Custom")
-    expect(not dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls shown for Custom")
-    expect(not dlg.spin_crossfeed_custom_freq.isHidden(), "Custom cutoff shown for Custom")
-    expect(not dlg.spin_crossfeed_custom_delay.isHidden(), "Custom delay shown for Custom")
-
-
-def save_round_trips_custom_settings() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
-    dlg.spin_crossfeed_custom_gain.setValue(-11.5)
-    dlg.spin_crossfeed_custom_freq.setValue(900.0)
-    dlg.spin_crossfeed_custom_delay.setValue(150.0)
-
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    expect(emitted[0]["crossfeed_custom_gain_db"] == -11.5, "custom gain saved")
-    expect(emitted[0]["crossfeed_custom_freq_hz"] == 900.0, "custom cutoff saved")
-    expect(emitted[0]["crossfeed_custom_delay_us"] == 150.0, "custom delay saved")
-
-
-# ── non-stereo active profile gates the section ──────────────────────────
-
-def stereo_active_profile_leaves_controls_enabled() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir(),
-                          active_profile_is_stereo=True)
-    expect(dlg.chk_crossfeed_enabled.isEnabled(), "checkbox enabled on a stereo profile")
-    expect(dlg.combo_crossfeed_preset.isEnabled(), "preset combo enabled on a stereo profile")
-    expect(dlg.slider_crossfeed_strength.isEnabled(), "strength slider enabled on a stereo profile")
-    expect(dlg.lbl_crossfeed_nonstereo.isHidden(), "no non-stereo note on a stereo profile")
-
-
-def non_stereo_active_profile_soft_disables_controls() -> None:
-    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir(),
-                          active_profile_is_stereo=False)
-    expect(not dlg.chk_crossfeed_enabled.isEnabled(), "checkbox disabled on a non-stereo profile")
-    expect(not dlg.combo_crossfeed_preset.isEnabled(), "preset combo disabled on a non-stereo profile")
-    expect(not dlg.slider_crossfeed_strength.isEnabled(),
-           "strength slider disabled on a non-stereo profile")
-    expect(not dlg.lbl_crossfeed_nonstereo.isHidden(), "non-stereo note shown")
-    # Soft-disable, not reset -- the underlying value is untouched by the gate.
-    expect(dlg.chk_crossfeed_enabled.isChecked() is False, "checked state unaffected by the gate")
-
-
-def can_crossfeed_matches_the_gate_main_window_computes() -> None:
-    # Sanity on the exact helper main_window.py calls before constructing the
-    # dialog (crossfeed.can_crossfeed against the active profile's parsed
-    # channel_sections). Crossfeed needs an L and an R and nothing more, so a
-    # layout WITH both -- even a multichannel one -- qualifies; only a layout
-    # missing one of them is a genuine no-op.
-    has_pair = [ChannelSection(channel="L"), ChannelSection(channel="C"),
-                ChannelSection(channel="R")]
-    expect(crossfeed.can_crossfeed(has_pair) is True,
-           "a layout containing both L and R can take crossfeed")
-    no_pair = [ChannelSection(channel="L"), ChannelSection(channel="C")]
-    expect(crossfeed.can_crossfeed(no_pair) is False,
-           "a layout with no R has nothing to crossfeed")
-
-
-# ── toggling through the dialog triggers a live re-render ────────────────
-
-def dialog_toggle_reaches_a_live_rerender() -> None:
-    manager = make_active_stereo_manager()
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    dlg.chk_crossfeed_enabled.setChecked(True)
-    idx = dlg.combo_crossfeed_preset.findData("meier")
-    dlg.combo_crossfeed_preset.setCurrentIndex(idx)
-    dlg.slider_crossfeed_strength.setValue(100)
-
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    manager.settings.update(emitted[0])
-    expect(manager.refresh_render_layers() is True, "refresh succeeds with an active stereo profile")
-    text = active_pointer_text(manager)
-    expect("Channel: XL XR" in text, "the live-rerendered active pointer carries the crossfeed block")
-    expect("Copy: XL=R" in text, "crossfeed copy lines present in the live render")
-
-
-def dialog_left_disabled_produces_no_crossfeed_in_the_render() -> None:
-    manager = make_active_stereo_manager()
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    # chk_crossfeed_enabled left at its default (off).
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    manager.settings.update(emitted[0])
-    manager.refresh_render_layers()
-    text = active_pointer_text(manager)
-    expect("Channel: XL XR" not in text, "no crossfeed block when the dialog leaves it disabled")
-
-
-def dialog_toggle_off_after_being_on_removes_the_block_live() -> None:
-    manager = make_active_stereo_manager()
-    manager.settings["crossfeed_enabled"] = True
-    manager.settings["crossfeed_strength"] = 100
-    manager.refresh_render_layers()
-    expect("Channel: XL XR" in active_pointer_text(manager),
-           "precondition: crossfeed block present before the dialog turns it off")
-
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    expect(dlg.chk_crossfeed_enabled.isChecked(), "dialog should prefill from the manager's live setting")
-    dlg.chk_crossfeed_enabled.setChecked(False)
-
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    manager.settings.update(emitted[0])
-    manager.refresh_render_layers()
-    expect("Channel: XL XR" not in active_pointer_text(manager),
-           "turning crossfeed off through the dialog removes it from the live render")
-
-
-# ── tray/toast quick toggle ──────────────────────────────────────────────
-
-def tray_toggle_persists_and_live_renders() -> None:
-    manager, w = make_window()
-    toast = w.tray_icon._toast
-    expect(not toast.action_crossfeed.isChecked(), "tray toggle starts unchecked (off by default)")
-    # Defaults are meier/100 -- flipping just the enable toggle is enough
-    # for the block to actually render.
-    toast.action_crossfeed.setChecked(True)
-    app.processEvents()
-    expect(manager.settings["crossfeed_enabled"] is True,
-           "tray toggle should persist crossfeed_enabled immediately")
-    raw = manager.metadata_path.read_text(encoding="utf-8")
-    expect('"crossfeed_enabled": true' in raw, "the toggle should be saved to disk immediately")
-    text = active_pointer_text(manager)
-    expect("Channel: XL XR" in text, "the tray toggle should trigger a live re-render")
-
-
-def tray_toggle_off_removes_block_live() -> None:
-    manager, w = make_window()
-    manager.settings["crossfeed_enabled"] = True
-    manager.refresh_render_layers()
-    expect("Channel: XL XR" in active_pointer_text(manager),
-           "precondition: crossfeed block present before the tray turns it off")
-
-    toast = w.tray_icon._toast
-    toast.set_crossfeed_state(True)  # sync the widget the way _build_tray_icon() does at startup
-    toast.action_crossfeed.setChecked(False)
-    app.processEvents()
-    expect(manager.settings["crossfeed_enabled"] is False, "tray toggle-off should persist immediately")
-    expect("Channel: XL XR" not in active_pointer_text(manager),
-           "turning the tray toggle off should remove the block from the live render")
-
-
-def settings_dialog_save_syncs_the_tray_toggle() -> None:
-    # main_window._open_settings()'s Accepted branch pushes the saved
-    # crossfeed_enabled value into the tray via tray_icon.set_crossfeed_state()
-    # -- exercised directly here (mirrors _on_crossfeed_toggled's own
-    # sync-back) since driving a modal dialog.exec() isn't practical headless.
-    manager, w = make_window()
-    expect(not w.tray_icon._toast.action_crossfeed.isChecked(), "tray starts unchecked")
-    w.tray_icon.set_crossfeed_state(True)
-    app.processEvents()
-    expect(w.tray_icon._toast.action_crossfeed.isChecked(),
-           "tray_icon.set_crossfeed_state() should reach the toast's checkbox")
-
-
-# ── "Insert into profile..." ─────────────────────────────────────────────
-
-def insert_into_profile_writes_block_and_disables_the_setting() -> None:
-    manager, w = make_window()
-    manager.settings["crossfeed_enabled"] = True
-    manager.settings["crossfeed_preset"] = "chumoy"
-    manager.settings["crossfeed_strength"] = 100
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    expect(not w._dirty, "precondition: editor must be clean before inserting")
-
-    w._on_insert_crossfeed(dlg)
+def _set_mode(w, mode: str) -> None:
+    combo = w.editor_panel.combo_crossfeed_mode
+    combo.setCurrentIndex(combo.findData(mode))
     app.processEvents()
 
-    expect(w._dirty, "inserting should mark the editor dirty (user still saves explicitly)")
-    expect(w._loaded_profile_id == "alpha", "inserting should load the active profile into the editor")
-    config = w.editor_panel.build_config()
-    joined = "\n".join(config.extra_lines)
-    expect("Channel: XL XR" in joined, "the rendered block should land in extra_lines")
-    expect("Copy: XL=R" in joined, "the block's Copy lines should be present too")
-    expect(manager.settings["crossfeed_enabled"] is False,
-           "the machine-level setting should be turned off to avoid a double-apply")
-    expect(dlg._working["crossfeed_enabled"] is False, "the dialog's working copy should reflect that")
-    expect(not dlg.chk_crossfeed_enabled.isChecked(), "the dialog's checkbox should reflect that too")
-    expect(not w.tray_icon._toast.action_crossfeed.isChecked(),
-           "the tray toggle should also reflect the setting being turned off")
 
-
-def insert_into_profile_refuses_on_dirty_editor() -> None:
-    manager, w = make_window()
-    manager.settings["crossfeed_enabled"] = True
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    w._dirty = True  # simulate an unrelated unsaved edit already in progress
-    seen = []
-    QMessageBox.information = staticmethod(
-        lambda *a, **k: seen.append(a[2] if len(a) > 2 else k.get("text", "")))
-    try:
-        w._on_insert_crossfeed(dlg)
-    finally:
-        QMessageBox.information = staticmethod(lambda *a, **k: None)
-    app.processEvents()
-    expect(len(seen) == 1, f"a refusal dialog should be shown exactly once, got {seen!r}")
-    expect("unsaved" in seen[0].lower(), f"the refusal should mention unsaved changes, got {seen[0]!r}")
-    expect(manager.settings["crossfeed_enabled"] is True,
-           "a refused insert must not touch the crossfeed setting")
-    expect(w._loaded_profile_id == "alpha", "a refused insert must not reload the editor")
-
-
-def insert_into_profile_noop_when_nothing_to_insert() -> None:
-    manager, w = make_window()
-    # crossfeed_enabled left at its default (False) -- nothing to insert.
-    # MainWindow.__init__ -> _load_profile_list() already opened the active
-    # profile into the editor at startup (unrelated to this feature), so the
-    # precondition to check is that a no-op insert doesn't disturb that.
-    loaded_before = w._loaded_profile_id
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    seen = []
-    QMessageBox.information = staticmethod(
-        lambda *a, **k: seen.append(a[2] if len(a) > 2 else k.get("text", "")))
-    try:
-        w._on_insert_crossfeed(dlg)
-    finally:
-        QMessageBox.information = staticmethod(lambda *a, **k: None)
-    app.processEvents()
-    expect(len(seen) == 1, f"a 'nothing to insert' dialog should be shown exactly once, got {seen!r}")
-    expect(not w._dirty, "a no-op insert must not mark the editor dirty")
-    expect(w._loaded_profile_id == loaded_before, "a no-op insert must not change the loaded profile")
-
+# ── editor per-profile control ───────────────────────────────────────────
 
 def editor_crossfeed_control_loads_edits_and_exposes_spec() -> None:
     """The per-profile crossfeed control in the editor: reflects the loaded
@@ -428,40 +147,256 @@ def editor_crossfeed_control_loads_edits_and_exposes_spec() -> None:
     expect(ed.chk_crossfeed.isEnabled() is False, "non-stereo layout soft-disables the control")
 
 
+def editor_mode_switch_does_not_mark_dirty_and_syncs_without_emitting() -> None:
+    """The machine-level source switch is not a profile edit: setting it via
+    set_crossfeed_mode() must not emit, and a user pick must not mark dirty."""
+    ed = EditorPanel(theme=THEMES[DEFAULT_THEME_NAME])
+    keys = [ed.combo_crossfeed_mode.itemData(i)
+            for i in range(ed.combo_crossfeed_mode.count())]
+    expect(keys == ["off", "profile", "global"], f"unexpected mode items: {keys!r}")
+
+    emitted: list[str] = []
+    ed.crossfeed_mode_changed.connect(emitted.append)
+    ed.set_crossfeed_mode("global")
+    expect(emitted == [], "set_crossfeed_mode must not emit")
+    expect(ed.combo_crossfeed_mode.currentData() == "global", "setter reflects the mode")
+
+    dirty = []
+    ed.dirty.connect(lambda: dirty.append(1))
+    ed.combo_crossfeed_mode.setCurrentIndex(ed.combo_crossfeed_mode.findData("off"))
+    expect(emitted == ["off"], f"a user pick emits the mode, got {emitted!r}")
+    expect(dirty == [], "the machine-level switch must not mark the profile dirty")
+
+
+# ── main-UI source switch drives the live render ─────────────────────────
+
+def source_switch_three_states_drive_the_live_render() -> None:
+    manager, w = make_window()
+    # Global value present so the un-set active profile has something to fall
+    # back to in "profile" mode and something to render in "global" mode.
+    manager.settings["crossfeed_preset"] = "linkwitz"
+    manager.settings["crossfeed_strength"] = 100
+
+    _set_mode(w, "off")
+    expect("Channel: XL XR" not in active_pointer_text(manager),
+           "Off renders no crossfeed block")
+
+    _set_mode(w, "profile")
+    text = active_pointer_text(manager)
+    expect("Channel: XL XR" in text,
+           "Per profile falls back to the global value for the un-set profile")
+
+    _set_mode(w, "global")
+    expect("Channel: XL XR" in active_pointer_text(manager),
+           "Global renders the global value for every profile")
+
+
+def source_switch_persists_and_syncs_the_tray() -> None:
+    manager, w = make_window()
+    _set_mode(w, "off")
+    expect(manager.settings["crossfeed_mode"] == "off", "the switch persists crossfeed_mode")
+    raw = manager.metadata_path.read_text(encoding="utf-8")
+    expect('"crossfeed_mode": "off"' in raw, "the mode is saved to disk immediately")
+    expect(not w.tray_icon._toast.action_crossfeed.isChecked(),
+           "Off unchecks the tray toggle")
+
+    _set_mode(w, "global")
+    expect(w.tray_icon._toast.action_crossfeed.isChecked(),
+           "a non-off mode checks the tray toggle")
+
+
+# ── tray quick toggle ────────────────────────────────────────────────────
+
+def tray_toggle_flips_mode_and_syncs_the_switch() -> None:
+    manager, w = make_window()
+    toast = w.tray_icon._toast
+    # Default mode is "profile", so the tray starts checked.
+    expect(toast.action_crossfeed.isChecked(), "tray starts checked (profile mode)")
+
+    toast.action_crossfeed.setChecked(False)
+    app.processEvents()
+    expect(manager.settings["crossfeed_mode"] == "off", "tray off parks the mode at off")
+    expect(w.editor_panel.combo_crossfeed_mode.currentData() == "off",
+           "the editor switch follows the tray to off")
+
+    toast.action_crossfeed.setChecked(True)
+    app.processEvents()
+    expect(manager.settings["crossfeed_mode"] == "profile",
+           "tray on restores the last non-off mode (profile)")
+    expect(w.editor_panel.combo_crossfeed_mode.currentData() == "profile",
+           "the editor switch follows the tray back on")
+
+
+def tray_toggle_restores_global_when_that_was_the_last_mode() -> None:
+    manager, w = make_window()
+    _set_mode(w, "global")
+    toast = w.tray_icon._toast
+    toast.action_crossfeed.setChecked(False)
+    app.processEvents()
+    expect(manager.settings["crossfeed_mode"] == "off", "tray off from global parks at off")
+    toast.action_crossfeed.setChecked(True)
+    app.processEvents()
+    expect(manager.settings["crossfeed_mode"] == "global",
+           "tray on restores global, the last non-off mode the user chose")
+
+
+# ── Settings dialog: the GLOBAL crossfeed VALUE editor ───────────────────
+
+def settings_card_has_no_enable_or_insert_controls() -> None:
+    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
+    expect(not hasattr(dlg, "chk_crossfeed_enabled"),
+           "the enable checkbox is gone (the main-UI switch owns on/off)")
+    expect(not hasattr(dlg, "btn_insert_crossfeed"),
+           "the Insert into profile button is gone")
+
+
+def settings_card_prefills_and_round_trips_the_value() -> None:
+    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
+    expect(dlg.combo_crossfeed_preset.currentData() == crossfeed.DEFAULT_PRESET,
+           "preset combo defaults to crossfeed.DEFAULT_PRESET")
+    expect(dlg.slider_crossfeed_strength.value() == 0,
+           "strength slider defaults to 0 (the global fallback starts inert)")
+
+    idx = dlg.combo_crossfeed_preset.findData("chumoy")
+    dlg.combo_crossfeed_preset.setCurrentIndex(idx)
+    dlg.slider_crossfeed_strength.setValue(65)
+    expect(dlg.lbl_crossfeed_strength.text() == "65%", "value label follows the slider")
+
+    emitted = []
+    dlg.settings_saved.connect(emitted.append)
+    dlg._apply_now()
+    expect("crossfeed_enabled" not in emitted[0], "the card no longer emits crossfeed_enabled")
+    expect(emitted[0]["crossfeed_preset"] == "chumoy", "preset saved")
+    expect(emitted[0]["crossfeed_strength"] == 65, "strength saved")
+
+
+def settings_card_combo_offers_all_six_modes() -> None:
+    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
+    keys = [dlg.combo_crossfeed_preset.itemData(i)
+            for i in range(dlg.combo_crossfeed_preset.count())]
+    expect(keys == ["chumoy", "meier", "linkwitz", "bauer", "direct", "custom"],
+           f"unexpected preset combo contents: {keys!r}")
+
+
+def settings_card_mode_switch_shows_only_the_matching_control_group() -> None:
+    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
+
+    def select(key: str) -> None:
+        idx = dlg.combo_crossfeed_preset.findData(key)
+        dlg.combo_crossfeed_preset.setCurrentIndex(idx)
+
+    select("chumoy")
+    expect(not dlg.slider_crossfeed_strength.isHidden(), "Strength shown for a named preset")
+    expect(dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls hidden for a named preset")
+
+    select("custom")
+    expect(dlg.slider_crossfeed_strength.isHidden(), "Strength hidden for Custom")
+    expect(not dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls shown for Custom")
+    expect(not dlg.spin_crossfeed_custom_freq.isHidden(), "Custom cutoff shown for Custom")
+    expect(not dlg.spin_crossfeed_custom_delay.isHidden(), "Custom delay shown for Custom")
+
+
+def settings_card_round_trips_custom_settings() -> None:
+    dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
+    dlg.spin_crossfeed_custom_gain.setValue(-11.5)
+    dlg.spin_crossfeed_custom_freq.setValue(900.0)
+    dlg.spin_crossfeed_custom_delay.setValue(150.0)
+
+    emitted = []
+    dlg.settings_saved.connect(emitted.append)
+    dlg._apply_now()
+    expect(emitted[0]["crossfeed_custom_gain_db"] == -11.5, "custom gain saved")
+    expect(emitted[0]["crossfeed_custom_freq_hz"] == 900.0, "custom cutoff saved")
+    expect(emitted[0]["crossfeed_custom_delay_us"] == 150.0, "custom delay saved")
+
+
+def settings_card_stereo_gate() -> None:
+    stereo = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir(),
+                            active_profile_is_stereo=True)
+    expect(stereo.combo_crossfeed_preset.isEnabled(), "preset combo enabled on a stereo profile")
+    expect(stereo.slider_crossfeed_strength.isEnabled(), "strength slider enabled on a stereo profile")
+    expect(stereo.lbl_crossfeed_nonstereo.isHidden(), "no non-stereo note on a stereo profile")
+
+    nons = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir(),
+                          active_profile_is_stereo=False)
+    expect(not nons.combo_crossfeed_preset.isEnabled(), "preset combo disabled on a non-stereo profile")
+    expect(not nons.slider_crossfeed_strength.isEnabled(),
+           "strength slider disabled on a non-stereo profile")
+    expect(not nons.lbl_crossfeed_nonstereo.isHidden(), "non-stereo note shown")
+
+
+def settings_value_drives_the_live_render_when_the_mode_selects_it() -> None:
+    manager = make_active_stereo_manager()
+    manager.settings["crossfeed_mode"] = "global"
+    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
+                         active_profile_is_stereo=True)
+    idx = dlg.combo_crossfeed_preset.findData("meier")
+    dlg.combo_crossfeed_preset.setCurrentIndex(idx)
+    dlg.slider_crossfeed_strength.setValue(100)
+
+    emitted = []
+    dlg.settings_saved.connect(emitted.append)
+    dlg._apply_now()
+    manager.settings.update(emitted[0])
+    expect(manager.refresh_render_layers() is True, "refresh succeeds with an active stereo profile")
+    text = active_pointer_text(manager)
+    expect("Channel: XL XR" in text, "the global value renders live in Global mode")
+    expect("Copy: XL=R" in text, "crossfeed copy lines present in the live render")
+
+
+def settings_value_stays_dark_when_the_mode_is_off() -> None:
+    manager = make_active_stereo_manager()
+    manager.settings["crossfeed_mode"] = "off"
+    manager.settings["crossfeed_preset"] = "meier"
+    manager.settings["crossfeed_strength"] = 100
+    manager.refresh_render_layers()
+    expect("Channel: XL XR" not in active_pointer_text(manager),
+           "a set global value renders nothing while the mode is Off")
+
+
+# ── helper sanity ────────────────────────────────────────────────────────
+
+def can_crossfeed_matches_the_gate_main_window_computes() -> None:
+    has_pair = [ChannelSection(channel="L"), ChannelSection(channel="C"),
+                ChannelSection(channel="R")]
+    expect(crossfeed.can_crossfeed(has_pair) is True,
+           "a layout containing both L and R can take crossfeed")
+    no_pair = [ChannelSection(channel="L"), ChannelSection(channel="C")]
+    expect(crossfeed.can_crossfeed(no_pair) is False,
+           "a layout with no R has nothing to crossfeed")
+
+
 def main() -> int:
     step("the editor's per-profile crossfeed control loads, edits and exposes a spec",
          editor_crossfeed_control_loads_edits_and_exposes_spec)
-    step("the crossfeed section prefills from DEFAULT_SETTINGS", prefill_matches_defaults)
-    step("Save round-trips enable/preset/strength into the emitted settings dict",
-         save_round_trips_all_three_keys)
-    step("a stereo active profile leaves the crossfeed controls enabled",
-         stereo_active_profile_leaves_controls_enabled)
-    step("a non-stereo active profile soft-disables the crossfeed controls",
-         non_stereo_active_profile_soft_disables_controls)
+    step("the editor source switch syncs silently and never marks the profile dirty",
+         editor_mode_switch_does_not_mark_dirty_and_syncs_without_emitting)
+    step("the source switch's three states each drive the expected live render",
+         source_switch_three_states_drive_the_live_render)
+    step("the source switch persists crossfeed_mode and syncs the tray",
+         source_switch_persists_and_syncs_the_tray)
+    step("the tray quick toggle flips crossfeed_mode and syncs the editor switch",
+         tray_toggle_flips_mode_and_syncs_the_switch)
+    step("the tray quick toggle restores global when that was the last mode",
+         tray_toggle_restores_global_when_that_was_the_last_mode)
+    step("the Settings card has no enable checkbox or insert button",
+         settings_card_has_no_enable_or_insert_controls)
+    step("the Settings card prefills and round-trips the global value",
+         settings_card_prefills_and_round_trips_the_value)
+    step("the Settings preset combo offers all six modes",
+         settings_card_combo_offers_all_six_modes)
+    step("switching preset mode shows only the matching control group",
+         settings_card_mode_switch_shows_only_the_matching_control_group)
+    step("the Settings card round-trips Custom settings",
+         settings_card_round_trips_custom_settings)
+    step("the Settings card soft-disables on a non-stereo active profile",
+         settings_card_stereo_gate)
+    step("the global value reaches a live re-render when the mode selects it",
+         settings_value_drives_the_live_render_when_the_mode_selects_it)
+    step("a set global value renders nothing while the mode is Off",
+         settings_value_stays_dark_when_the_mode_is_off)
     step("crossfeed.can_crossfeed() accepts any layout carrying L and R",
          can_crossfeed_matches_the_gate_main_window_computes)
-    step("the preset combo offers all six modes", combo_offers_all_six_modes)
-    step("switching preset mode shows only the matching control group",
-         mode_switch_shows_only_the_matching_control_group)
-    step("Save round-trips Custom settings", save_round_trips_custom_settings)
-    step("toggling crossfeed on through the dialog and applying it triggers a live re-render",
-         dialog_toggle_reaches_a_live_rerender)
-    step("leaving crossfeed disabled in the dialog keeps the live render crossfeed-free",
-         dialog_left_disabled_produces_no_crossfeed_in_the_render)
-    step("toggling crossfeed off through the dialog removes it from an already-live render",
-         dialog_toggle_off_after_being_on_removes_the_block_live)
-    step("the tray/toast quick toggle persists crossfeed_enabled and re-renders live",
-         tray_toggle_persists_and_live_renders)
-    step("turning the tray toggle off removes the block from an already-live render",
-         tray_toggle_off_removes_block_live)
-    step("tray_icon.set_crossfeed_state() reaches the toast's checkbox",
-         settings_dialog_save_syncs_the_tray_toggle)
-    step("Insert into profile writes the block into extra_lines and disables the setting",
-         insert_into_profile_writes_block_and_disables_the_setting)
-    step("Insert into profile refuses on a dirty editor",
-         insert_into_profile_refuses_on_dirty_editor)
-    step("Insert into profile no-ops when crossfeed has nothing to insert",
-         insert_into_profile_noop_when_nothing_to_insert)
     print(("\nFAILURES: " + ", ".join(FAILURES)) if FAILURES else "\nALL CHECKS PASSED")
     return 1 if FAILURES else 0
 

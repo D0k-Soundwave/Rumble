@@ -127,7 +127,7 @@ def main() -> int:
             "default_bands": 31,
             "auto_switch_enabled": True,
             "auto_switch_rules": [{"profile_id": "alpha"}],
-            "crossfeed_enabled": True,
+            "crossfeed_mode": "global",
             # Protected -- must survive any reset.
             "apo_managed": False,
             "last_active_profile": "alpha",
@@ -145,7 +145,7 @@ def main() -> int:
         expect(s["auto_switch_rules"] == [], "auto-switch rules should be cleared")
         expect(s["default_bands"] == 31,
                "eq_defaults was not selected and must be untouched")
-        expect(s["crossfeed_enabled"] is True,
+        expect(s["crossfeed_mode"] == "global",
                "sound_layers was not selected and must be untouched")
 
     step("resets only the chosen groups", resets_only_chosen_groups)

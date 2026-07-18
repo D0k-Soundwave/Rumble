@@ -149,25 +149,30 @@ def a_toggle_applies_and_persists_by_itself() -> None:
 
 
 def an_audible_setting_reaches_the_live_render() -> None:
-    # Crossfeed is a render-layer setting: turning it on must change what APO
-    # is playing right now, which is the whole point of "hear the difference".
+    # The global crossfeed VALUE is a render-layer setting: with the source
+    # mode on Global, editing that value in the dialog must change what APO is
+    # playing right now, which is the whole point of "hear the difference".
     manager, window = make_window()
+    manager.settings["crossfeed_mode"] = "global"
+    manager.settings["crossfeed_strength"] = 0  # inert to start, so it is dark
+    manager.save()
+    manager.refresh_render_layers()  # clear the block make_window rendered
     dlg = make_dialog(manager, window)
     expect("Channel: XL XR" not in active_render_text(manager),
            "precondition: no crossfeed in the live render")
 
-    dlg.chk_crossfeed_enabled.setChecked(True)
+    dlg.slider_crossfeed_strength.setValue(100)
     wait_for_debounce()
 
-    expect(manager.settings["crossfeed_enabled"] is True, "setting applied")
+    expect(manager.settings["crossfeed_strength"] == 100, "setting applied")
     expect("Channel: XL XR" in active_render_text(manager),
            "the live APO render carries crossfeed immediately, with no Save")
 
-    # ...and turning it back off removes it again, live.
-    dlg.chk_crossfeed_enabled.setChecked(False)
+    # ...and taking the value back to zero removes it again, live.
+    dlg.slider_crossfeed_strength.setValue(0)
     wait_for_debounce()
     expect("Channel: XL XR" not in active_render_text(manager),
-           "turning it off removes it from the live render immediately")
+           "zeroing the value removes it from the live render immediately")
 
 
 # ── debounce ────────────────────────────────────────────────────────────
