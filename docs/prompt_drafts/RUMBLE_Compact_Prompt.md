@@ -172,10 +172,10 @@ GraphicEQ jobs (correction never lives here):
 - **B Tone layer (on request, Q20):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref. The only mode where a region carries both a filter (correction) and GEQ points (taste) — intentional.
 Rules: correction always in filters; GEQ may add preference and/or freeform on top; the same correction is never written twice; preference stays clamped ±3/±5/±8; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if both A and B apply, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`); non-flat GEQ gets `# geq:` line(s) stating `layer=`.
 
-**Speaker delay (from Q4b):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`; equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
+**Speaker delay (from Q4b):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
 ```
 Channel: L
-Delay: 1.45 ms
+Delay: 1.5 ms
 Channel: R
 Delay: 0 ms
 ```
