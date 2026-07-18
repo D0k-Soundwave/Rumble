@@ -125,8 +125,10 @@ class ToastMenu(QWidget):
         self.action_crossfeed.setCheckable(True)
         self.action_crossfeed.toggled.connect(self.crossfeed_toggled.emit)
         describe(self.action_crossfeed, "Crossfeed",
-                 "Quickly turn headphone crossfeed on or off, using its "
-                 "current preset and strength from Settings -> Listeners.")
+                 "Quickly turn headphone crossfeed on or off. On restores the "
+                 "last source mode (Per profile or Global) you had; the "
+                 "Crossfeed switch in the editor offers the full three-way "
+                 "choice.")
         self._layout.addWidget(self.action_crossfeed)
         self._layout.addSpacing(4)
 
