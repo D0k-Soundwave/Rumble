@@ -109,7 +109,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 **Channel balance:** a reported left/right pull (§1) is corrected with a small per-channel `Preamp:` on the LOUDER side only (attenuate the louder channel; never boost the quieter one — boosting eats headroom), typically ≤2 dB. Static placement/gear fix; a hearing-side imbalance goes to RUMBLE's Ear Calibration instead. Placement in §6/§8; skip ⇒ no trim.
 
 **Filter placement:**
-- One filter per real deviation; width-matched Q; ≤32/section.
+- One filter per real deviation; width-matched Q. **The count is driven by need, not a target: 32/section is a ceiling, there is no floor.** Never drop a real correction to hit a smaller number, and never pad to reach a larger one — a correction filter is only ever removed by genuine consolidation (§5, redundant overlap), never to shrink the count.
 - `PK` peaks/dips; `LSC`/`HSC` shelves; `LP`/`HP`/`BP`/`NO` as needed. **Notch type = `NO`, never "notch".**
 - Shelves are filters (LSC/HSC), never GEQ (the §6 GEQ tone-layer is a freeform contour, not a shelf — the one allowed overlap).
 - Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. List ascending by Fc, `Filter 1…N`, no gaps.
@@ -266,7 +266,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 - **Channel balance (only if a pull was reported):** a per-channel `Preamp:` attenuating the louder side, in a bare per-channel section after the main body (§6). Never boost the quieter side. Omit entirely if centered.
 - **Surface these hand-offs in the plain-language summary when flagged (they are app features, never profile content):** RUMBLE's Ear Calibration for a between-ears hearing difference; Crossfeed for in-head/hard-panned headphone fatigue; the bass-management tool for a separate subwoofer; the Loudness feature for quiet/background listening.
 - `Channel:` default stereo `L R`; mono `all` only if explicit. **Surround channel names (APO):** stereo `L R`; 5.1 `L R C LFE RL RR` (some devices report `SL SR` instead of `RL RR` — match what RUMBLE's channel preset/status bar shows); 7.1 `L R C LFE RL RR SL SR`. Surround rules: apply the correction to the main channels (one `Channel: L R C RL RR SL SR` style section, or `all` when genuinely uniform); **never apply full-range EQ or boosts to `LFE`** (it is band-limited by content and drivers — a full-range boost there only adds distortion); bass redirection/crossovers/sub feeds belong to RUMBLE's bass-management tool, not to this profile. `Device:` optional, normally omitted (never auto-`all`).
-- Filter line: `Filter n: ON|OFF <type> Fc <hz> Hz Gain <dB> dB Q <q>` (or `BW Oct <v>`, convertible via §4.6). **≤32 per section** (app cap; default 10).
+- Filter line: `Filter n: ON|OFF <type> Fc <hz> Hz Gain <dB> dB Q <q>` (or `BW Oct <v>`, convertible via §4.6). **32 per section is the ceiling, not a target** — emit exactly as many as the real deviations plus justified taste moves require, however few or many.
 - Types accepted: PK, LSC/HSC, LS/HS, LS/HS 6dB|12dB, LP/HP/LPQ/HPQ/BP, NO, AP, PEQ, Modal, IIR. RUMBLE normally emits PK/LSC/HSC, occasionally NO/LP/HP.
 - `Delay: <t> ms` (or samples, relative to the device's actual sample rate — shown in RUMBLE's status bar; Settings → auto/manual, not always 48 kHz) in bare per-channel blocks after the main section (§6). `GraphicEQ:` always present — exactly one per EQ section, none in delay-only blocks.
 
