@@ -438,12 +438,17 @@ DEFAULT_SETTINGS: dict = {
     # headphone crossfeed, generated as raw APO config text and appended
     # after the rest of the composed render (never through ProfileConfig's
     # structured fields -- see rumble/core/crossfeed.py's module docstring
-    # and KB §17.4). Session/machine-scoped like the other render-time
-    # toggles above, not a per-profile property -- crossfeed is a property
-    # of listening on headphones on THIS machine. Off by default: it's a
-    # taste/positioning effect, not a correction, and should be an opt-in
-    # the same way the ISO 226 layer above is.
-    "crossfeed_enabled": False,
+    # and KB §17.4). Crossfeed is primarily a property of the profile now
+    # (each profile carries its own `# Crossfeed:` selection, edited in the
+    # editor); this machine-level SOURCE mode -- flipped from the main-UI
+    # switch -- decides which value the render layer uses:
+    #   "off"     -> no crossfeed for any profile,
+    #   "profile" -> each profile's own value, falling back to the global
+    #                value below for a profile that sets none (the default),
+    #   "global"  -> the global value below for EVERY profile (override).
+    "crossfeed_mode": "profile",
+    # The GLOBAL crossfeed value (preset/strength/custom), used by the
+    # "profile" fallback and the "global" override above. Edited in Settings.
     "crossfeed_preset": crossfeed.DEFAULT_PRESET,
     "crossfeed_strength": 100,
     # "custom" preset mode: user-set gain/freq/delay instead of a named
@@ -1956,23 +1961,32 @@ class ProfileManager:
     # ── B2 headphone crossfeed ────────────────────────────────────────
 
     def _global_crossfeed_spec(self) -> "crossfeed.CrossfeedSpec | None":
-        """The machine-level default crossfeed (the Settings card / tray
-        toggle), or None when disabled. A profile that carries its own
-        crossfeed (per-profile, e.g. from an AI `# Crossfeed:` line) overrides
-        this; a profile without one falls back to it -- so the existing global
-        control still works as the default for un-specified profiles."""
-        if not bool(self.settings.get("crossfeed_enabled")):
-            return None
-        return crossfeed.CrossfeedSpec(
+        """The global crossfeed VALUE (preset/strength/custom, edited in
+        Settings), or None when that value is inert (a named preset at zero
+        strength). Whether it actually applies -- as a fallback for un-set
+        profiles, as an override for every profile, or not at all -- is the
+        `crossfeed_mode` question answered in _effective_crossfeed()."""
+        spec = crossfeed.CrossfeedSpec(
             preset=str(self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)),
             strength=float(self.settings.get("crossfeed_strength", 100)),
             custom_gain_db=float(self.settings.get("crossfeed_custom_gain_db", -6.0)),
             custom_freq_hz=float(self.settings.get("crossfeed_custom_freq_hz", 700.0)),
             custom_delay_us=float(self.settings.get("crossfeed_custom_delay_us", 300.0)),
         )
+        return spec if spec.is_active() else None
 
     def _effective_crossfeed(self, own: "crossfeed.CrossfeedSpec | None") -> "crossfeed.CrossfeedSpec | None":
-        """A profile's own crossfeed if it has one, else the global default."""
+        """Which crossfeed the render layer applies for a profile whose own
+        selection is *own*, decided by the machine-level `crossfeed_mode`:
+          "off"     -> nothing,
+          "global"  -> the global value for every profile (override),
+          "profile" -> the profile's own value, falling back to the global
+                       value when it sets none (the default)."""
+        mode = str(self.settings.get("crossfeed_mode", "profile"))
+        if mode == "off":
+            return None
+        if mode == "global":
+            return self._global_crossfeed_spec()
         return own if own is not None else self._global_crossfeed_spec()
 
     def _render_crossfeed_block(self, config: "apo_config.ProfileConfig",

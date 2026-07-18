@@ -74,7 +74,7 @@ RESET_GROUPS: tuple[ResetGroup, ...] = (
                     "the listener-correction toggle. Your Ear Calibration "
                     "results are kept.",
         keys=(
-            "crossfeed_enabled",
+            "crossfeed_mode",
             "crossfeed_preset",
             "crossfeed_strength",
             "crossfeed_custom_gain_db",

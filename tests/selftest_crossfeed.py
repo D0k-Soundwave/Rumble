@@ -385,6 +385,60 @@ def test_per_profile_crossfeed_round_trips_and_activates():
         assert "XL" not in pointer  # plain single-Include, no composed block
 
 
+def _active_render(mgr) -> str:
+    # Follow the active pointer to whatever actually carries the composed
+    # body (the listener scratch when a render layer is active, else the
+    # plain Include pointer itself), the same way the UI selftest does.
+    pointer = (mgr.config_path / "rumble_active.txt").read_text(encoding="utf-8")
+    if "rumble_listener_active.txt" in pointer:
+        return (mgr.rumble_dir / "rumble_listener_active.txt").read_text(encoding="utf-8")
+    return pointer
+
+
+def test_crossfeed_mode_off_profile_global():
+    # The machine-level crossfeed_mode decides which value the render layer
+    # uses. Two stereo profiles -- one carrying its OWN spec (meier, no delay
+    # line), one carrying none -- against a distinct GLOBAL value (linkwitz,
+    # which emits a "Delay:" line) let us tell own-vs-global apart in the
+    # rendered active pointer.
+    with tempfile.TemporaryDirectory() as tmp:
+        mgr = _manager(tmp)
+        mgr.ensure_first_run()
+        cfg = _stereo_config()
+        own = mgr.create_profile("Own", config=cfg)
+        own.crossfeed = crossfeed.CrossfeedSpec(preset="meier", strength=90)
+        mgr._write_profile_file(own, cfg)
+        unset = mgr.create_profile("Unset", config=cfg)
+        # Global value: linkwitz at full strength -- emits a Delay: line that
+        # meier does not, so it is unmistakable in the render.
+        mgr.settings["crossfeed_preset"] = "linkwitz"
+        mgr.settings["crossfeed_strength"] = 100
+
+        def render_of(profile_id: str) -> str:
+            mgr.activate_profile(profile_id)
+            return _active_render(mgr)
+
+        # Off: no crossfeed for anyone.
+        mgr.settings["crossfeed_mode"] = "off"
+        assert "Channel: XL XR" not in render_of(own.id)
+        assert "Channel: XL XR" not in render_of(unset.id)
+
+        # Profile: own profile uses its own value (meier, no delay); the
+        # un-set profile falls back to the global value (linkwitz, delay).
+        mgr.settings["crossfeed_mode"] = "profile"
+        own_render = render_of(own.id)
+        assert "Channel: XL XR" in own_render and "Delay:" not in own_render
+        unset_render = render_of(unset.id)
+        assert "Channel: XL XR" in unset_render and "Delay: 0.3 ms" in unset_render
+
+        # Global: the global value overrides EVERY profile, so even the one
+        # with its own spec renders the global linkwitz (delay present).
+        mgr.settings["crossfeed_mode"] = "global"
+        own_global = render_of(own.id)
+        assert "Channel: XL XR" in own_global and "Delay: 0.3 ms" in own_global
+        assert "Delay: 0.3 ms" in render_of(unset.id)
+
+
 if __name__ == "__main__":
     for n, f in sorted(globals().items()):
         if n.startswith("test_"):
