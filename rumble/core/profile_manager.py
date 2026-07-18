@@ -1930,6 +1930,26 @@ class ProfileManager:
 
     # ── B2 headphone crossfeed ────────────────────────────────────────
 
+    def _global_crossfeed_spec(self) -> "crossfeed.CrossfeedSpec | None":
+        """The machine-level default crossfeed (the Settings card / tray
+        toggle), or None when disabled. A profile that carries its own
+        crossfeed (per-profile, e.g. from an AI `# Crossfeed:` line) overrides
+        this; a profile without one falls back to it -- so the existing global
+        control still works as the default for un-specified profiles."""
+        if not bool(self.settings.get("crossfeed_enabled")):
+            return None
+        return crossfeed.CrossfeedSpec(
+            preset=str(self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)),
+            strength=float(self.settings.get("crossfeed_strength", 100)),
+            custom_gain_db=float(self.settings.get("crossfeed_custom_gain_db", -6.0)),
+            custom_freq_hz=float(self.settings.get("crossfeed_custom_freq_hz", 700.0)),
+            custom_delay_us=float(self.settings.get("crossfeed_custom_delay_us", 300.0)),
+        )
+
+    def _effective_crossfeed(self, own: "crossfeed.CrossfeedSpec | None") -> "crossfeed.CrossfeedSpec | None":
+        """A profile's own crossfeed if it has one, else the global default."""
+        return own if own is not None else self._global_crossfeed_spec()
+
     def _render_crossfeed_block(self, config: "apo_config.ProfileConfig",
                                 spec: "crossfeed.CrossfeedSpec | None") -> str:
         """The one place render-time headphone crossfeed happens. Unlike
@@ -1977,8 +1997,9 @@ class ProfileManager:
         layers (correction, trim, ISO 226 loudness, loudness matching) are the
         same for every branch; crossfeed is per-profile, so pass the branch's
         *meta* to test its own crossfeed (defaults to the active profile)."""
-        cf = (meta.crossfeed if meta is not None
-              else (self.get_active_profile().crossfeed if self.get_active_profile() else None))
+        own = (meta.crossfeed if meta is not None
+               else (self.get_active_profile().crossfeed if self.get_active_profile() else None))
+        cf = self._effective_crossfeed(own)
         return (not self.get_active_correction().is_flat
                 or any(self.session_trim.values())
                 or not self.get_active_loudness_correction().is_flat
@@ -2068,8 +2089,9 @@ class ProfileManager:
                    else "# RUMBLE per-device scratch file — temporary, safe to delete\n\n")
         scratch_path = self.rumble_dir / scratch_filename
         self.rumble_dir.mkdir(parents=True, exist_ok=True)
-        scratch_path.write_text(header + self._render_layered_body(config, meta.crossfeed),
-                                encoding="utf-8")
+        scratch_path.write_text(
+            header + self._render_layered_body(config, self._effective_crossfeed(meta.crossfeed)),
+            encoding="utf-8")
         return f"{RUMBLE_SUBDIR}/{scratch_filename}"
 
     def _cleanup_stale_device_scratch(self, active_names: set[str]) -> None:
@@ -2282,7 +2304,7 @@ class ProfileManager:
         self._preview_seq += 1
         text = (f"# RUMBLE live preview — temporary scratch file, safe to delete "
                 f"(seq {self._preview_seq})\n\n"
-                + self._render_layered_body(config, crossfeed_spec))
+                + self._render_layered_body(config, self._effective_crossfeed(crossfeed_spec)))
         try:
             self.rumble_dir.mkdir(parents=True, exist_ok=True)
             preview_path.write_text(text, encoding="utf-8")
