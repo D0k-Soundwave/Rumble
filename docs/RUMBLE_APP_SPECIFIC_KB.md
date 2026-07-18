@@ -1738,8 +1738,8 @@ AFTER the profile body — so how that body groups its own `Channel:` sections n
 no sections at all -> **True** (implicit all channels); an `all` section -> True; any layout naming
 both L and R -> True, **including multichannel** (`L R C LFE RL RR`) since C/LFE/surrounds are left
 untouched; only a layout with no stereo pair at all (a lone `C`, `LFE`) -> False, the sole genuine
-no-op. Call sites: `profile_manager._render_crossfeed_block()` / `insert_crossfeed_into_config()`,
-`main_window._open_settings()`.
+no-op. Call sites: `profile_manager._render_crossfeed_block()`, `main_window._open_settings()`.
+(The `insert_crossfeed_into_config()` call site named here was removed in stage 3 — see §17.8.)
 
 **The same `Channel:`-less hole existed in listener correction**, and was worse:
 `compose_channel_sections([])` had nothing to iterate and returned NO sections, so **per-ear Ear
@@ -1782,10 +1782,12 @@ text appended after the rest of the composed render body. `ProfileManager._rende
 is the one choke point that does this (composes `_apply_render_layers()`, renders it, appends
 `_render_crossfeed_block()`'s output if non-empty), shared by both `preview_config()` and
 `_write_active_pointer()` so canonical activation, the listener-corrected scratch file, and live
-ABX/preview playback all carry crossfeed identically. Settings: `crossfeed_enabled` (default
-`False`), `crossfeed_preset` (default `"meier"`), `crossfeed_strength` (default `100`) — plain
-machine/session-scoped keys in `profiles.json`, same rationale as ISO 226's own settings (§16.5):
-crossfeed is a property of *headphone listening on this machine*, not of a portable profile.
+ABX/preview playback all carry crossfeed identically. Settings as shipped in S8: `crossfeed_enabled`
+(default `False`), `crossfeed_preset` (default `"meier"`), `crossfeed_strength` (default `100`) —
+plain machine/session-scoped keys in `profiles.json`, same rationale as ISO 226's own settings
+(§16.5). **Superseded in stage 3 (§17.8):** crossfeed is now primarily a per-profile property, the
+`crossfeed_enabled` bool is gone, and the machine-level key is the three-way `crossfeed_mode` source
+switch; the global preset/strength keys survive as the fallback/override *value*.
 
 Settings → Listeners gained a "CROSSFEED (HEADPHONES)" section (S8) mirroring the ISO 226
 section's shape exactly: enable checkbox, preset combo (`crossfeed.PRESETS`' `.label`s), strength
@@ -1797,34 +1799,73 @@ passes it in. When `False`, all four crossfeed controls are soft-disabled (`setE
 values kept untouched — not reset) and a muted explanatory note is shown, rather than hiding the
 section outright, so the setting stays visible and legible even while it has no effect.
 
-**17.6 Tray/toast quick toggle.** `rumble/ui/toast_menu.py` gained a checkable "Crossfeed"
-`QPushButton` (`action_crossfeed`) alongside the existing Bypass/Auto-Switch quick toggles,
-relayed through `rumble/ui/tray_icon.py` exactly like those two (`crossfeed_toggled` signal,
-`set_crossfeed_state()` pull-based sync method). `MainWindow._on_crossfeed_toggled()` persists
-`crossfeed_enabled` immediately (`manager.save()`) and calls `refresh_render_layers()` for an
-instant live re-render — the same "persist immediately, apply live, not gated by the Settings
-dialog's Save button" shape `_on_auto_switch_toggled()` already established. The tray toggle and
-the Settings dialog's own checkbox are kept in sync in both directions: `_open_settings()`'s
-Accepted branch pushes the saved value into the tray after every Save, and (S8's later addition,
-17.7 below) inserting into a profile pushes the resulting "off" state into the tray too.
+**17.6 Tray/toast quick toggle (as shipped in S8; reworked in §17.8).** `rumble/ui/toast_menu.py`
+gained a checkable "Crossfeed" `QPushButton` (`action_crossfeed`) alongside the existing
+Bypass/Auto-Switch quick toggles, relayed through `rumble/ui/tray_icon.py` exactly like those two
+(`crossfeed_toggled` signal, `set_crossfeed_state()` pull-based sync method). As originally shipped,
+`MainWindow._on_crossfeed_toggled()` persisted `crossfeed_enabled` immediately (`manager.save()`)
+and called `refresh_render_layers()` for an instant live re-render — the "persist immediately,
+apply live, not gated by the Settings dialog's Save button" shape `_on_auto_switch_toggled()`
+established. **Stage 3 (§17.8) repointed this at `crossfeed_mode`:** the toggle is now a two-state
+view of the three-state mode (On restores the last non-off mode, Off parks it), and syncs with the
+main-UI source switch, not a Settings checkbox.
 
-**17.7 "Insert into profile..."** `ProfileManager.insert_crossfeed_into_config(config)` writes
-the current preset/strength as the same rendered block `_render_crossfeed_block()` produces at
-render time, but into `config.extra_lines` instead of appending it only at the render choke
-point — the block is self-contained (its own `Copy:`/`Channel:`/`Copy:` structure, independent of
-the profile's own `channel_sections`) and `apo_config.render_config_body()` always renders
-`extra_lines` last and verbatim (its own canonical order, §17.4's original finding), which is
-exactly the position the block needs. Returns *config* unchanged (identity, not a copy) when
-crossfeed is off, zero-strength, or the layout isn't stereo-only, so the UI caller can tell
-"nothing to insert" from an `is` check. `MainWindow._on_insert_crossfeed()` mirrors B1's
-"Bake into profile..." shape exactly: refuses (message box) on a dirty editor; on success, loads
-the modified config into the editor as a dirty, unsaved change (the user still clicks Save) and
-turns the machine-level `crossfeed_enabled` setting off — otherwise the profile's own inserted
-text and the settings-level render layer would both apply, compounding the effect, the same
-reasoning `bake_session_trim()`'s own trim-reset follows for B1. The Settings dialog gets a
-`note_crossfeed_inserted()` public method (mirroring `note_loudness_reference_calibrated()`) so its
-checkbox reflects the setting being turned off without needing to be reopened, and the tray toggle
-is synced the same way.
+**17.7 "Insert into profile..." (S8; REMOVED in stage 3, §17.8).** As shipped in S8,
+`ProfileManager.insert_crossfeed_into_config(config)` wrote the current preset/strength as the same
+rendered block `_render_crossfeed_block()` produces, but into `config.extra_lines` instead of only
+at the render choke point — the block is self-contained (its own `Copy:`/`Channel:`/`Copy:`
+structure, independent of the profile's own `channel_sections`) and `apo_config.render_config_body()`
+always renders `extra_lines` last and verbatim (§17.4's original finding), exactly the position the
+block needs. `MainWindow._on_insert_crossfeed()` mirrored B1's "Bake into profile..." shape (refuse
+on a dirty editor; on success load a dirty unsaved change and turn `crossfeed_enabled` off to avoid
+a double-apply), with a `SettingsDialog.note_crossfeed_inserted()` to sync the checkbox. **This whole
+escape hatch was removed in stage 3:** a profile now carries its crossfeed natively in its
+`# Crossfeed:` header (§17.8), so there was nothing left to "insert" as portable text —
+`insert_crossfeed_into_config`, `_on_insert_crossfeed` + its wiring, and the
+`insert_crossfeed_requested`/`note_crossfeed_inserted` pair are all gone.
+
+**17.8 Per-profile crossfeed + the one-place source switch (stage 3, 2026-07-18/19).** Crossfeed
+stopped being a machine-level bool and became primarily a property of the profile, with a single
+machine-level switch choosing how it is applied. The pieces:
+
+- **Per-profile value.** A profile carries its own selection in its file header
+  (`# Crossfeed: preset=<key> strength=<n>`, `crossfeed.format_spec`/`parse_spec` ↔
+  `ProfileMeta.crossfeed: CrossfeedSpec`), edited in the editor's crossfeed row
+  (`EditorPanel._build_crossfeed_row` — the "This profile" checkbox + circuit combo + strength
+  slider) and persisted alongside the EQ via `ProfileManager.set_profile_crossfeed()`. RUMBLE's AI
+  profile prompts emit that header line, so an AI profile arrives with a crossfeed selection and it
+  applies automatically. The block is still render-only raw text (§17.4) — never baked into the
+  profile's `ProfileConfig`/`extra_lines`.
+
+- **The three-way source mode.** The machine-level key is now `crossfeed_mode`
+  (`"off"|"profile"|"global"`, default `"profile"`), replacing the `crossfeed_enabled` bool.
+  `ProfileManager._effective_crossfeed(own)` is the whole rule: `off` → nothing; `global` → the
+  global value for every profile (override); `profile` → the profile's own value, falling back to
+  the global value when it has none. `_global_crossfeed_spec()` no longer has an enable gate — it
+  returns the global value whenever `is_active()`, else `None`.
+
+- **The main-UI switch.** A compact Off / Per profile / Global dropdown on the editor's crossfeed
+  row (`combo_crossfeed_mode`, signal `crossfeed_mode_changed`) drives `crossfeed_mode`.
+  `MainWindow._apply_crossfeed_mode()` is the single choke point: persist, `refresh_render_layers()`,
+  and keep every surface in sync (the editor switch via `set_crossfeed_mode()`, the tray two-state
+  toggle via `set_crossfeed_state()`, and a Settings Reset via `_apply_settings_live`). The tray
+  toggle remembers the last non-off mode (`_last_crossfeed_mode`) to restore on On.
+
+- **The Settings card is now the global VALUE only.** "Global crossfeed value"
+  (`settings_dialog.py`) keeps the preset combo, strength slider, and Custom gain/cutoff/delay, but
+  lost its Enable checkbox (the switch owns on/off) and the Insert button (§17.7). It emits only
+  `crossfeed_preset`/`crossfeed_strength`/`crossfeed_custom_*`.
+
+- **Off by default, without hiding the feature.** `crossfeed_strength` now defaults to **0** (was
+  100), so out of the box the default `"profile"` mode renders each profile's OWN crossfeed
+  immediately but nothing for un-set profiles — the faithful translation of the old
+  `crossfeed_enabled=False` default, which kept crossfeed the opt-in taste/positioning effect it
+  always was rather than silently applying meier/100 to every stereo profile. Raising the global
+  strength in Settings is what opts a machine into a global fallback/override. (A regression the
+  full gate caught: with the old strength-100 default, un-set profiles fell back to an active global
+  value, adding a render layer that changed the active-pointer shape and broke `selftest_solo_ab`'s
+  plain-render assertion — see the manager-level guard test
+  `test_default_settings_render_only_explicit_per_profile_crossfeed`.)
 
 ## §18 — Session tone trim: bass/treble/tilt (Sessions S4/S5, campaign B, Rumble adaptive front-end)
 
@@ -2412,7 +2453,7 @@ can both call it without a live `EditorPanel` instance). Page flow: layout confi
 shape `measure_dialog.py`'s S15 verify-pass preview uses) -> Apply, which emits
 `apply_requested(profile_id, ProfileConfig)` rather than writing a profile file directly — `MainWindow.
 _on_apply_bass_management()` loads it into the editor as a dirty, unsaved change through the normal
-save flow, the same shape `_on_bake_tone_trim`/`_on_insert_crossfeed` established (the dialog itself
+save flow, the same shape `_on_bake_tone_trim` established (the dialog itself
 never touches `editor_panel`). Per the S23->S24 Amendment's own documented fallback, "use measured
 distances" is NOT wired: no Campaign C measurement data exists anywhere a wizard could reach (grepped —
 `measure_channel_delays()`/`run_measurement()` are not called from any shipped UI, and
