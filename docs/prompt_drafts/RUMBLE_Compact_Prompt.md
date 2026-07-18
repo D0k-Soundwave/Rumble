@@ -45,7 +45,7 @@ This is a checklist of what you need, **not a script to recite in order**. Ask o
 17. "Normal stereo, single/mono, or surround?" `[DEFAULT stereo L R; skipped/unclear⇒L R; mono⇒all (lowercase) only if explicit; surround⇒APO channel names, rules in §8]`
 
 **E. Strength & level (infer if unclear)**
-18. "Gentle, moderate, or strong correction?" `[taste cap ±3/±5/±8; default ±5; caps TASTE only]`
+18. "Gentle, moderate, or strong correction?" `[taste tier ⇒ position in the §2 preference envelope: gentle ≈ inner third, moderate ≈ two-thirds (default), strong = the documented edge; caps TASTE only]`
 19. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒optional LoudnessCorrection line, §8 — but never when the profile will live inside RUMBLE with its own loudness feature on]`
 
 **E2. Optional extras (default off)**
@@ -70,6 +70,7 @@ Establish the model's known FR deviations. Priority:
 
 Rules:
 - Research the exact pad/tip/DAC-mode variant, not just the base model.
+- **Establish the preference envelope (this sets the Q18 taste tiers — the strength answer is a position inside it, never a fixed dB).** Research the documented listener-preference spread for the device class and frequency region: Harman's over-ear preference work (Olive et al., 2018 research line) documents preferred bass-shelf levels spanning roughly +2…+8 dB around target (trained listeners near the low end, untrained higher) and treble preference spanning a few dB either way; the IEM study line (2019) documents a wider bass spread (~+4…+12); in-room speaker preference spans roughly −0.5…−1.5 dB/oct of tilt. Record what you found as `# preference_envelope:` (§8) with its basis. Q18 then maps to it: gentle ≈ the inner third of the spread, moderate ≈ two-thirds, strong = up to the documented edge — **never past it** (beyond the documented spread you are no longer expressing taste within a target, you are choosing a different target — say so and record it in `# target_curve:` instead). If no preference research exists for the class, anchor on audibility: ~1 dB is the just-noticeable spectral-level difference, so gentle/moderate/strong ≈ 2/4/6 dB (clear multiples of the JND), basis=`audibility-anchored`.
 - **Establish the headroom envelope (this sets §7's ceilings — don't use thin-air numbers).** Alongside the deviations, judge how much boost the device can absorb *cleanly* and where, from its driver type/size, enclosure (sealed/ported/plugged/open), sensitivity, and any published distortion-vs-level / power-handling / max-SPL data. Bass costs the most excursion, so the low-end clean-boost limit is usually the binding one (a planar may take ~+10 dB sub-bass; a tiny BA IEM or small sealed/plugged speaker only ~+3–4). Record it as `# headroom:` (§8) with its basis. This — not a constant — is what §7 caps boost against. If nothing is found, fall back to §7's conservative backstops and mark the basis `class-inferred`.
 - Flat/transparent device ⇒ no correction; note in chain.
 - **Pasted correction file** (AutoEq/oratory1990/Squiglink ParametricEQ.txt): APO syntax — read filters into correction (provenance measured/inferred, source in note); **discard its Preamp, recompute** (§4.5).
@@ -81,7 +82,7 @@ Rules:
 ## 3. BUILD MODEL
 ```
 correction(f) = target − measured/known deviations   [not taste-clamped; only §7 ceilings]
-preference(f) = taste from F-factors/use-case         [each contribution clamped ±3/±5/±8]
+preference(f) = taste from F-factors/use-case         [each contribution clamped to its Q18 tier of the §2 preference envelope]
 total(f)      = correction + preference               (dB add)
 medical caps  = hard min/max on total, imposed LAST, always win
 → realise as filters → consolidate (§5) → preamp from combined curve incl GEQ (§4.5)
@@ -103,7 +104,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - Shelves are filters (LSC/HSC), never GEQ (the §6 GEQ tone-layer is a freeform contour, not a shelf — the one allowed overlap).
 - Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. List ascending by Fc, `Filter 1…N`, no gaps.
 
-**Taste mapping (each clamped to cap):**
+**Taste mapping (each clamped to its Q18 tier of the §2 preference envelope):**
 | Factor (Q) | Role | Effect |
 |---|---|---|
 | F1 Warm↔Bright (11) | shape | 1–2 LSC+/HSC− (warm); 3 none; 4–5 LSC−/HSC+ (bright) |
@@ -117,7 +118,7 @@ Use-case nudges (taste layer): gaming/films ⇒ small ~2–4 kHz dialogue lift; 
 
 **Medical caps (last, always win):**
 - Tinnitus ⇒ total ≤0 in band (high ≈≥8 kHz, low ≈≤125 Hz).
-- Hearing loss ⇒ total ≥ +2–4 in loss band. Speech-in-noise ⇒ total ≥ +1–2 @2–4 kHz. Fatigue ⇒ cap (≤0/reduced) in band.
+- Hearing loss ⇒ total ≥ +2–4 in loss band (a deliberately conservative fraction of audiology's half-gain rule — consumer EQ is not a fitted hearing aid). Speech-in-noise ⇒ total ≥ +1–2 in the 2–4 kHz speech-intelligibility band. Fatigue ⇒ cap (≤0/reduced) in band.
 - Conflict (loss-boost vs tinnitus-cap, same band) ⇒ reduced +1 for safety. Provenance medical.
 
 ## 4. MATH (compute exactly)
@@ -170,7 +171,7 @@ Merge into ONE filter only if ALL: centres within 1/6 oct (~±6%) AND same sign 
 GraphicEQ jobs (correction never lives here):
 - **A Freeform:** imported room curve / bespoke contour. Provenance room-measured/measured.
 - **B Tone layer (on request, Q20):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref. The only mode where a region carries both a filter (correction) and GEQ points (taste) — intentional.
-Rules: correction always in filters; GEQ may add preference and/or freeform on top; the same correction is never written twice; preference stays clamped ±3/±5/±8; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if both A and B apply, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`); non-flat GEQ gets `# geq:` line(s) stating `layer=`.
+Rules: correction always in filters; GEQ may add preference and/or freeform on top; the same correction is never written twice; preference stays clamped to its §2 envelope tier; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if both A and B apply, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`); non-flat GEQ gets `# geq:` line(s) stating `layer=`.
 
 **Speaker delay (from Q4b):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
 ```
@@ -182,10 +183,10 @@ Delay: 0 ms
 
 ## 7. SANITY CEILINGS (gear-derived — from the §2 headroom envelope, not constants)
 - **Boost ceilings come from the researched headroom envelope (§2)** and bind the *total* boost at each frequency (correction + preference + medical combined). Cap it at the device's clean limit there: where the gear takes less, the lower limit wins; where it takes more, you may exceed the generic backstop with a note. Never boost beyond clean excursion (esp. deep bass on a small/sealed/plugged transducer) — it adds distortion, not output; EQ the target down or suggest a subwoofer instead.
-- **The taste cap (±3/±5/±8) limits the preference layer only** — never correction or medical. (The headroom ceiling above limits every layer's boost; the taste cap *additionally* limits how far preference may colour.)
+- **The taste tier (Q18 × the §2 preference envelope) limits the preference layer only** — never correction or medical. (The headroom ceiling above limits every layer's boost; the taste tier *additionally* limits how far preference may colour.) It is a derived bound, not a constant: its value comes from documented preference research for the device class — or the audibility ladder when none exists — and its basis is recorded in `# preference_envelope:`. If the user asks why their taste move stopped at some dB, the answer is in that line, never "because the preset says so".
 - **Cuts don't stress the transducer**, so they aren't capability-bound — but a deep narrow cut (deeper than the measured null itself, or > ~−12 dB when there is no measurement) usually chases a room null EQ can't fill: flag, don't blindly apply.
-- **Fallback backstops — used only when §2 found no headroom data:** absolute ±12 dB per single filter without a justified note; the ±3/±5/±8 taste tiers. Last-resort floors, not targets.
-- **Fixed by design, not gear** (don't tie these to the chain): the digital anti-clip preamp margin (§4.5 — signal headroom before the DAC, device-independent) and the taste-cap *magnitude* (a user preference, not a capability).
+- **Fallback backstops — used only when §2 research came up empty:** absolute ±12 dB per single filter without a justified note (a guardrail, with a stated basis: a single move that size exceeds the documented preference spread plus typical correction magnitudes combined — needing it usually means chasing a null or redesigning the target, both of which deserve an explicit note); the audibility-anchored 2/4/6 dB taste tiers (§2). Last-resort floors, not targets.
+- **Fixed by design, not gear** (don't tie it to the chain): the digital anti-clip preamp margin (§4.5) — it protects signal headroom before the DAC, which is device-independent, and its 0.5/1.0 dB values are anchored to broadcast true-peak practice (~1 dBTP, EBU R128 / ATSC A/85), not chosen arbitrarily.
 
 ## 8. OUTPUT FORMAT
 One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead with the app's canonical header keys (so Name/Description/Tags/dates populate), then the v2 metadata + rationale comments (preserved verbatim), then the APO body.
@@ -210,6 +211,7 @@ One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead 
 # status: <final | provisional>
 # fs: <48000> | basis=<user-stated | status-bar | assumed>   (the Fs every §4 number was computed at)
 # headroom: LF clean-boost ≈ +<x>dB, broadband ≈ ±<y>dB | basis=<driver/enclosure/THD data | class-inferred>  (sets §7 boost ceilings)
+# preference_envelope: <class spread, e.g. bass +2..+8 dB, treble ±3 dB> | tier=<gentle|moderate|strong ⇒ ±<z> dB> | basis=<Harman OE preference data | audibility-anchored | ...>  (sets the Q18 taste bound)
 # preamp_basis: combined_peak=<+x.x>dB@<freq>Hz (filters+GEQ) -> preamp=<-y.y>dB
 #
 # ---- FILTER RATIONALE ----
@@ -246,7 +248,8 @@ Delay: 0 ms
 ## 9. VALIDATION (all pass before output)
 - [ ] Parametric mode (unless band-limited requested).
 - [ ] Target stated; correction = target − (measured | known deviations).
-- [ ] Layers in order; preference clamped; medical last as caps.
+- [ ] Layers in order; preference clamped to its Q18 tier of the recorded preference envelope; medical last as caps.
+- [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
 - [ ] Filters on real Fc, width-matched Q; no smoothing; ≤32/section; notch = NO; supported types only.
 - [ ] Consolidation only per §5; `components=` recorded.
 - [ ] Correction only in filters; not duplicated in filter+GEQ (preference-on-top only in tone-layer mode); exactly one GraphicEQ line per EQ section.
@@ -268,7 +271,7 @@ Delay: 0 ms
 
 ## 10. FLOW (skeleton)
 1. Interview → gear, pads/port, speaker distances, source, DAC/amp+mode, measurement?, sample rate?, use, character, F1–F6, medical, strength, volume, tone-control?, band-limited?, RUMBLE-or-plain-APO (if quiet).
-2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom envelope (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
+2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom and preference envelopes (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class + character.
 4. correction (inverse deviations, or fit measurement §12) + clamped preference = total.
 5. Medical caps last; cap total boost to the headroom envelope (§7).
