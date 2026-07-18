@@ -789,9 +789,11 @@ class SettingsDialog(FramelessDialog):
 
         # Crossfeed
         cf = _Card(
-            "Crossfeed (headphones)",
-            "Attenuated, delayed, low-pass cross-mix so hard-panned headphone "
-            "content stops sounding like it's inside your skull.")
+            "Default crossfeed (headphones)",
+            "The crossfeed used for any profile that doesn't set its own (each "
+            "profile can override this in the editor). Attenuated, delayed, "
+            "low-pass cross-mix so hard-panned headphone content stops sounding "
+            "like it's inside your skull.")
         self.chk_crossfeed_enabled = QCheckBox("Enable crossfeed")
         self.chk_crossfeed_enabled.setChecked(bool(self._working.get("crossfeed_enabled", False)))
         self.chk_crossfeed_enabled.toggled.connect(self._schedule_apply)
