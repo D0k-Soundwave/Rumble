@@ -35,8 +35,7 @@ This is a checklist of what you need, **not a script to recite in order**. Ask o
 **C. Desired sound (→ taste layer)**
 10. "Natural/balanced, warmer/cosier, or brighter/crisper overall?" `[target tilt; balanced=default]`
 11. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
-12. "Gentle tweak or big change?" `[F2 effort + F5 boldness ⇒ scale taste magnitude]`
-13. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, gentle cut at that region atop device peak-taming]`
+13. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming]`
 14. "Voices/leads clear & up-front or distant? Want more clarity?" `[F4 ⇒ presence lift ~2–4 kHz]`
 15. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
 
@@ -108,13 +107,13 @@ medical caps  = hard min/max on total, imposed LAST, always win
 | Factor (Q) | Role | Effect |
 |---|---|---|
 | F1 Warm↔Bright (11) | shape | 1–2 LSC+/HSC− (warm); 3 none; 4–5 LSC−/HSC+ (bright) |
-| F2 Effort (12) | scale | ×0.25–0.5 / ×0.75 / ×1.0–1.25 |
-| F3 Sensitivity (13) | shape | if sensitive: extra gentle cut at named harsh region |
-| F4 Detail (14) | shape | some: presence +0.5–1; lots: +1–2 broad ~2–4 kHz |
-| F5 Boldness (12) | scale | ×0.75 / ×1.0 / ×1.25 |
-| F6 Dynamics (15) | caution | smooth: gentle/broad; punchy: a little more contrast; never widens correction |
+| F3 Sensitivity (13) | shape | if sensitive: clear cut at named harsh region |
+| F4 Detail (14) | shape | some: presence +2 broad; lots: +3–4 broad ~2–4 kHz |
+| F6 Dynamics (15) | caution | smooth: broad moves over narrow ones; punchy: a little more contrast; never widens correction |
 
-Use-case nudges (taste layer): gaming/films ⇒ small ~2–4 kHz dialogue lift; casual ⇒ ×0.75; mixing ⇒ 0.
+**Audibility floor (why there is no "effort"/"boldness" scaling factor):** this tool exists to make clearly audible changes — a profile that doesn't obviously sound different would be built by hand in RUMBLE's editor instead, so there is nothing to ask. Every taste move you decide to make renders at full strength: **at least ~2 dB (about twice the ~1 dB JND), up to the Q18 tier of the §2 preference envelope.** Never scale a justified move down into near-inaudibility; if a move cannot justify at least the floor, omit it entirely and say so in the summary. Restraint is expressed as *fewer moves*, never *smaller-than-audible moves*.
+
+Use-case nudges (taste layer): gaming/films ⇒ clear ~2–4 kHz dialogue lift (+2–3); casual ⇒ fewer moves, each still at full audible strength; mixing ⇒ no taste moves at all.
 
 **Medical caps (last, always win):**
 - Tinnitus ⇒ total ≤0 in band (high ≈≥8 kHz, low ≈≤125 Hz).
@@ -250,6 +249,7 @@ Delay: 0 ms
 - [ ] Target stated; correction = target − (measured | known deviations).
 - [ ] Layers in order; preference clamped to its Q18 tier of the recorded preference envelope; medical last as caps.
 - [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
+- [ ] Every taste move meets the ~2 dB audibility floor (§3) — sub-audible moves omitted, never scaled down.
 - [ ] Filters on real Fc, width-matched Q; no smoothing; ≤32/section; notch = NO; supported types only.
 - [ ] Consolidation only per §5; `components=` recorded.
 - [ ] Correction only in filters; not duplicated in filter+GEQ (preference-on-top only in tone-layer mode); exactly one GraphicEQ line per EQ section.
@@ -270,7 +270,7 @@ Delay: 0 ms
 - [ ] Grid-Compat (if requested) emitted alongside, own recomputed preamp (§11).
 
 ## 10. FLOW (skeleton)
-1. Interview → gear, pads/port, speaker distances, source, DAC/amp+mode, measurement?, sample rate?, use, character, F1–F6, medical, strength, volume, tone-control?, band-limited?, RUMBLE-or-plain-APO (if quiet).
+1. Interview → gear, pads/port, speaker distances, source, DAC/amp+mode, measurement?, sample rate?, use, character, F1/F3/F4/F6, medical, strength, volume, tone-control?, band-limited?, RUMBLE-or-plain-APO (if quiet).
 2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom and preference envelopes (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class + character.
 4. correction (inverse deviations, or fit measurement §12) + clamped preference = total.
