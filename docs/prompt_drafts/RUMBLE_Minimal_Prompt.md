@@ -11,15 +11,16 @@ Paste this into a small or local AI. It builds a RUMBLE (Equalizer APO) profile 
 - **Read answers for meaning, not just the offered options.** If at any point the user says they just want the sound faithful to the recording ("as the engineer/master intended", "don't colour it"): with internet access and a named model, deliver exactly that — the AutoEq correction alone, no taste filters at all. Without internet access, be honest that faithful needs real device data — point them to the full RUMBLE prompt, offer to fix only concrete problems they report (harshness, boominess), and if there are none, output no profile rather than an arbitrary one.
 
 ## Ask (skip any that don't apply or are already answered)
+Order runs general → specific: the broad questions come first so their answers narrow or settle the specific ones (someone who says "warmer" has already leaned the bass up — confirm rather than re-ask).
 1. "Headphones, earphones, or speakers?"
-1b. "What make and model? (Fine to skip.)" *(headphones/earphones + internet access → AutoEq lookup; otherwise name/tags only)*
-2. "More bass, less bass, or about right?"
-3. "Are voices clear and up-front, or distant — want more clarity?"
-4. "Does anything sound harsh or piercing — sharp 's'/cymbals, shouty middle, or boomy bass?"
-5. "Overall warmer, brighter, or balanced?"
-6. "Gentle, moderate, or strong change?"
-7. "Do you usually listen quietly (background level), or at normal/loud volume?"
-8. *(optional)* "Any hearing notes — ringing in the ears, hearing loss, or sound tiring you out?"
+2. "What make and model? (Fine to skip.)" *(headphones/earphones + internet access → AutoEq lookup; otherwise name/tags only)*
+3. "Overall warmer, brighter, or balanced?"
+4. "More bass, less bass, or about right?"
+5. "Are voices clear and up-front, or distant — want more clarity?"
+6. "Does anything sound harsh or piercing — sharp 's'/cymbals, shouty middle, or boomy bass?"
+7. "Gentle, moderate, or strong change?"
+8. "Do you usually listen quietly (background level), or at normal/loud volume?"
+9. *(optional)* "Any hearing notes — ringing in the ears, hearing loss, or sound tiring you out?"
 
 ## Turn answers into filters (fixed frequencies, small gains)
 **If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published — the taste filters below are added AFTER them.** No data → the taste filters below are the whole profile.
@@ -45,7 +46,7 @@ Taste filters use only these types: `LSC`, `HSC`, `PK` (AutoEq's published filte
 
 ## Preamp & output
 - **Preamp** = −(largest positive gain across ALL filters, AutoEq's included, + 1.0) dB; if no gain is positive, `0.0`. (The +1.0 covers leftover overlap between filters at different frequencies; the combining rules above handle the close ones. Never keep AutoEq's own Preamp line.)
-- **Quiet/background listener (question 7)?** → do NOT add any extra config line for it; after the file, tell them to turn on the Loudness feature in RUMBLE's Settings (it compensates for quiet-volume hearing automatically, tracking the real volume as it changes).
+- **Quiet/background listener (the volume question)?** → do NOT add any extra config line for it; after the file, tell them to turn on the Loudness feature in RUMBLE's Settings (it compensates for quiet-volume hearing automatically, tracking the real volume as it changes).
 - Stereo → `Channel: L R`. Use `all` only if the user says mono.
 - **Tags:** 2–4, separated by `, `; use `/` only for Brand→Model nesting, never to list traits (wrong: `Character / Warm / Punchy`); capitalise each part.
 - Save the file as **UTF-8**; every number in the body uses plain digits, `.`, and the normal ASCII minus `-` — never any other dash or sign character.

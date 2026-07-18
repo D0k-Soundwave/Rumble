@@ -19,40 +19,42 @@ This is a checklist of what you need, **not a script to recite in order**. Ask o
 
 **Read answers for intent, not just options.** Any answer may express a philosophy instead of picking one of the offered choices — that is valid data, never force the binary. In particular, **fidelity intent** ("true to the recording", "as the engineer/master intended", "don't colour it", "exactly as mastered") given at ANY question means: preference layer = 0 everywhere (correction-only profile — the same machinery as mixing/critical, §3), skip every remaining taste question (a reported discomfort like harshness still gets its F3 cut — that is fixing a flaw, not adding colour), and record `# intent: fidelity` (§8). And run the §0 pre-question gate every time: map each reply onto every open checklist item before choosing the next question — a question whose answer is already implied is never asked, only confirmed in passing.
 
-**A. Listening with**
-1. "Headphones, earphones/earbuds, or speakers?" `[acoustic model + target type]`
+Ordering is general→specific and correction-basis→taste, so each answer maximally narrows or eliminates the ones after it (the §0 gate then skips anything already implied). The shape questions and their strength control sit together; hearing and level come after; channels is a setup fact, grouped with the gear.
+
+**A. Your setup** (gear, playback config, correction basis)
+1. "Headphones, earphones/earbuds, or speakers?" `[acoustic model + target type — gates every branch below]`
 2. "Make and model?" `[research online §2 = correction source]`
 3. *(headphones/IEM)* "Original or aftermarket pads/tips? Name if known." `[research that variant; else inferred]`
 4. *(speakers)* "Near a wall or out in the room? Ports plugged?" `[near-wall+port shift bass; plugged⇒sealed⇒may need bass lift not cut; room dominates ±6–10 dB]`
-4b. *(speakers, skippable)* "Is one speaker closer to your seat than the other? Rough distance of each from your seat? (Skip if equal.)" `[delay §6: only the L/R distance difference matters; delay nearer speaker ≈2.9 ms/metre; <0.1 m⇒none]`
-5. "Playing from computer/phone/other? Any separate DAC or amp?" `[research DAC/amp w/ modes or coloration; flat device⇒no correction]`
-6. *(if DAC/amp has modes)* "Any sound modes/filters on?" `[mode changes target; lock to it]`
-7. "Do you have a measurement of this setup (e.g. mic app)? Fine if not." `[measurement⇒correction basis, status=final; speakers w/o⇒provisional; only file you ever invite]`
-7b. *(skippable)* "What sample rate is your output device set to? RUMBLE shows it in its status bar; Windows shows it under Sound settings > device Properties. Fine to skip." `[Fs for every §4 computation; skipped⇒48000 assumed; record either way in # fs: (§8)]`
+5. *(speakers, skippable)* "Is one speaker closer to your seat than the other? Rough distance of each from your seat? (Skip if equal.)" `[speaker-distance answer ⇒ delay §6: only the L/R distance difference matters; delay nearer speaker ≈2.9 ms/metre; <0.1 m⇒none]`
+6. "Playing from computer/phone/other? Any separate DAC or amp?" `[research DAC/amp w/ modes or coloration; flat device⇒no correction]`
+7. *(if DAC/amp has modes)* "Any sound modes/filters on?" `[mode changes target; lock to it]`
+8. "Do you have a measurement of this setup (e.g. mic app)? Fine if not." `[measurement⇒correction basis, status=final; speakers w/o⇒provisional; only file you ever invite]`
+9. *(skippable)* "What sample rate is your output device set to? RUMBLE shows it in its status bar; Windows shows it under Sound settings > device Properties. Fine to skip." `[sample-rate answer ⇒ Fs for every §4 computation; skipped⇒48000 assumed; record either way in # fs: (§8)]`
+10. "Normal stereo, single/mono, or surround?" `[DEFAULT stereo L R; skipped/unclear⇒L R; mono⇒all (lowercase) only if explicit; surround⇒APO channel names, rules in §8]`
 
-**B. Use**
-8. "Mostly music, gaming, films, critical/mixing, or casual?" `[mixing⇒preference=0; target flat (HP/IEM) or in-room tilt (speakers); gaming/films⇒small dialogue lift]`
-9. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
+**B. How you use it**
+11. "Mostly music, gaming, films, critical/mixing, or casual?" `[mixing⇒preference=0; target flat (HP/IEM) or in-room tilt (speakers); gaming/films⇒small dialogue lift]`
+12. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
 
-**C. Desired sound (→ taste layer)**
-10. "Natural/balanced, warmer/cosier, brighter/crisper — or simply as faithful to the recording as possible?" `[target tilt; balanced=default; faithful ⇒ fidelity intent (§1 rule): preference=0, correction only, skip the remaining C-section questions]`
-11. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
-13. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming]`
-14. "Do voices and lead instruments sit where you want them — or would you like them clearer / more up-front?" `[F4 ⇒ presence lift ~2–4 kHz, ONLY when they want vocals raised beyond the corrected response. "Where the engineer put them"/"as mastered" ⇒ F4=0 and fidelity intent (§1): the correction layer already restores the intended placement by removing the device's own colorations — say so in one plain line]`
-15. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
+**C. The sound you want** (the whole taste layer — overall shape, specifics, then strength)
+13. "Natural/balanced, warmer/cosier, brighter/crisper — or simply as faithful to the recording as possible?" `[target tilt; balanced=default; faithful ⇒ fidelity intent (§1 rule): preference=0, correction only, skip the rest of section C]`
+14. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
+15. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming — a flaw fix, allowed even under fidelity intent]`
+16. "Do voices and lead instruments sit where you want them — or would you like them clearer / more up-front?" `[F4 ⇒ presence lift ~2–4 kHz, ONLY when they want vocals raised beyond the corrected response. "Where the engineer put them"/"as mastered" ⇒ F4=0 and fidelity intent (§1): the correction layer already restores the intended placement by removing the device's own colorations — say so in one plain line]`
+17. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
+18. "Gentle, moderate, or strong overall?" `[strength tier ⇒ position in the §2 preference envelope: gentle ≈ inner third, moderate ≈ two-thirds (default), strong = the documented edge; caps TASTE only; skipped entirely under fidelity intent]`
 
-**D. Hearing & setup (optional)**
-16. "Any hearing notes — ringing (tinnitus), speech-in-noise trouble, hearing loss, fatigue? Fine to skip." `[medical caps, last, always win: tinnitus⇒≤0 in band; loss⇒floor +2–4; speech-in-noise⇒+1–2 @2–4 kHz; fatigue⇒cap in band]`
-17. "Normal stereo, single/mono, or surround?" `[DEFAULT stereo L R; skipped/unclear⇒L R; mono⇒all (lowercase) only if explicit; surround⇒APO channel names, rules in §8]`
+**D. Hearing** (optional; medical caps, applied last, always win)
+19. "Any hearing notes — ringing (tinnitus), speech-in-noise trouble, hearing loss, fatigue? Fine to skip." `[medical caps: tinnitus⇒≤0 in band; loss⇒floor +2–4; speech-in-noise⇒+1–2 @2–4 kHz; fatigue⇒cap in band]`
 
-**E. Strength & level (infer if unclear)**
-18. "Gentle, moderate, or strong correction?" `[taste tier ⇒ position in the §2 preference envelope: gentle ≈ inner third, moderate ≈ two-thirds (default), strong = the documented edge; caps TASTE only]`
-19. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒recommend enabling RUMBLE's Loudness feature (Settings) in the summary — never emit a LoudnessCorrection: line, §8]`
+**E. Listening level**
+20. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒recommend enabling RUMBLE's Loudness feature (Settings) in the summary — never emit a LoudnessCorrection: line, §8]`
 
-**E2. Optional extras (default off)**
-20. "Want a simple tone control you can nudge yourself afterwards?" `[yes⇒GEQ tone-layer §6: correction in filters, preference in GraphicEQ contour. no⇒preference in filters]`
+**F. Optional extra** (default off)
+21. "Want a simple tone control you can nudge yourself afterwards?" `[tone-control option: yes⇒GEQ tone-layer §6 (correction in filters, preference in GraphicEQ contour); no⇒preference in filters]`
 
-**F. Confirm**
+**G. Confirm**
 22. Recap (gear + use + desired sound + hearing) → "Right?" Fix the named item, or generate.
 
 ## 2. RESEARCH THE GEAR (you, not the user)
@@ -69,7 +71,7 @@ Establish the model's known FR deviations. Priority:
 
 Rules:
 - Research the exact pad/tip/DAC-mode variant, not just the base model.
-- **Establish the preference envelope (this sets the Q18 taste tiers — the strength answer is a position inside it, never a fixed dB).** Research the documented listener-preference spread for the device class and frequency region: Harman's over-ear preference work (Olive et al., 2018 research line) documents preferred bass-shelf levels spanning roughly +2…+8 dB around target (trained listeners near the low end, untrained higher) and treble preference spanning a few dB either way; the IEM study line (2019) documents a wider bass spread (~+4…+12); in-room speaker preference spans roughly −0.5…−1.5 dB/oct of tilt. Record what you found as `# preference_envelope:` (§8) with its basis. Q18 then maps to it: gentle ≈ the inner third of the spread, moderate ≈ two-thirds, strong = up to the documented edge — **never past it** (beyond the documented spread you are no longer expressing taste within a target, you are choosing a different target — say so and record it in `# target_curve:` instead). If no preference research exists for the class, anchor on audibility: ~1 dB is the just-noticeable spectral-level difference, so gentle/moderate/strong ≈ 2/4/6 dB (clear multiples of the JND), basis=`audibility-anchored`.
+- **Establish the preference envelope (this sets the strength-question taste tiers — the strength answer is a position inside it, never a fixed dB).** Research the documented listener-preference spread for the device class and frequency region: Harman's over-ear preference work (Olive et al., 2018 research line) documents preferred bass-shelf levels spanning roughly +2…+8 dB around target (trained listeners near the low end, untrained higher) and treble preference spanning a few dB either way; the IEM study line (2019) documents a wider bass spread (~+4…+12); in-room speaker preference spans roughly −0.5…−1.5 dB/oct of tilt. Record what you found as `# preference_envelope:` (§8) with its basis. the strength answer then maps to it: gentle ≈ the inner third of the spread, moderate ≈ two-thirds, strong = up to the documented edge — **never past it** (beyond the documented spread you are no longer expressing taste within a target, you are choosing a different target — say so and record it in `# target_curve:` instead). If no preference research exists for the class, anchor on audibility: ~1 dB is the just-noticeable spectral-level difference, so gentle/moderate/strong ≈ 2/4/6 dB (clear multiples of the JND), basis=`audibility-anchored`.
 - **Establish the headroom envelope (this sets §7's ceilings — don't use thin-air numbers).** Alongside the deviations, judge how much boost the device can absorb *cleanly* and where, from its driver type/size, enclosure (sealed/ported/plugged/open), sensitivity, and any published distortion-vs-level / power-handling / max-SPL data. Bass costs the most excursion, so the low-end clean-boost limit is usually the binding one (a planar may take ~+10 dB sub-bass; a tiny BA IEM or small sealed/plugged speaker only ~+3–4). Record it as `# headroom:` (§8) with its basis. This — not a constant — is what §7 caps boost against. If nothing is found, fall back to §7's conservative backstops and mark the basis `class-inferred`.
 - Flat/transparent device ⇒ no correction; note in chain.
 - **Pasted correction file** (AutoEq/oratory1990/Squiglink ParametricEQ.txt): APO syntax — read filters into correction (provenance measured/inferred, source in note); **discard its Preamp, recompute** (§4.5).
@@ -81,7 +83,7 @@ Rules:
 ## 3. BUILD MODEL
 ```
 correction(f) = target − measured/known deviations   [not taste-clamped; only §7 ceilings]
-preference(f) = taste from F-factors/use-case         [each contribution clamped to its Q18 tier of the §2 preference envelope]
+preference(f) = taste from F-factors/use-case         [each contribution clamped to its strength tier of the §2 preference envelope]
 total(f)      = correction + preference               (dB add)
 medical caps  = hard min/max on total, imposed LAST, always win
 → realise as filters → consolidate (§5) → preamp from combined curve incl GEQ (§4.5)
@@ -102,7 +104,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - Shelves are filters (LSC/HSC), never GEQ (the §6 GEQ tone-layer is a freeform contour, not a shelf — the one allowed overlap).
 - Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. List ascending by Fc, `Filter 1…N`, no gaps.
 
-**Taste mapping (each clamped to its Q18 tier of the §2 preference envelope):**
+**Taste mapping (each clamped to its strength tier of the §2 preference envelope):**
 | Factor (Q) | Role | Effect |
 |---|---|---|
 | F1 Warm↔Bright (11) | shape | 1–2 LSC+/HSC− (warm); 3 none; 4–5 LSC−/HSC+ (bright) |
@@ -110,7 +112,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 | F4 Detail (14) | shape | some: presence +2 broad; lots: +3–4 broad ~2–4 kHz; as-mastered ⇒ 0 (fidelity, §1) |
 | F6 Dynamics (15) | caution | smooth: broad moves over narrow ones; punchy: a little more contrast; never widens correction |
 
-**Audibility floor (why there is no "effort"/"boldness" scaling factor):** this tool exists to make clearly audible changes — a profile that doesn't obviously sound different would be built by hand in RUMBLE's editor instead, so there is nothing to ask. Every taste move you decide to make renders at full strength: **at least ~2 dB (about twice the ~1 dB JND), up to the Q18 tier of the §2 preference envelope.** Never scale a justified move down into near-inaudibility; if a move cannot justify at least the floor, omit it entirely and say so in the summary. Restraint is expressed as *fewer moves*, never *smaller-than-audible moves*.
+**Audibility floor (why there is no "effort"/"boldness" scaling factor):** this tool exists to make clearly audible changes — a profile that doesn't obviously sound different would be built by hand in RUMBLE's editor instead, so there is nothing to ask. Every taste move you decide to make renders at full strength: **at least ~2 dB (about twice the ~1 dB JND), up to the strength tier of the §2 preference envelope.** Never scale a justified move down into near-inaudibility; if a move cannot justify at least the floor, omit it entirely and say so in the summary. Restraint is expressed as *fewer moves*, never *smaller-than-audible moves*.
 
 Use-case nudges (taste layer): gaming/films ⇒ clear ~2–4 kHz dialogue lift (+2–3); casual ⇒ fewer moves, each still at full audible strength; mixing ⇒ no taste moves at all.
 
@@ -120,7 +122,7 @@ Use-case nudges (taste layer): gaming/films ⇒ clear ~2–4 kHz dialogue lift (
 - Conflict (loss-boost vs tinnitus-cap, same band) ⇒ reduced +1 for safety. Provenance medical.
 
 ## 4. MATH (compute exactly)
-Sample rate `Fs`: the device's actual rate from Q7b when given; otherwise 48000. Every formula below uses this Fs; record it and its basis in `# fs:` (§8). Biquad responses warp with Fs (most visibly for Fc above ~1/4 of Fs); GraphicEQ lines and `ms` delays do not.
+Sample rate `Fs`: the device's actual rate from the sample-rate answer (§1) when given; otherwise 48000. Every formula below uses this Fs; record it and its basis in `# fs:` (§8). Biquad responses warp with Fs (most visibly for Fc above ~1/4 of Fs); GraphicEQ lines and `ms` delays do not.
 **4.1 Biquad (RBJ Cookbook):**
 ```
 w0=2*pi*Fc/Fs; cosw0=cos(w0); sinw0=sin(w0); alpha=sinw0/(2*Q); A=10^(gain/40); sqrtA=sqrt(A)
@@ -168,10 +170,10 @@ Merge into ONE filter only if ALL: centres within 1/6 oct (~±6%) AND same sign 
 ## 6. GraphicEQ (dual role) + delay
 GraphicEQ jobs (correction never lives here):
 - **A Freeform:** imported room curve / bespoke contour. Provenance room-measured/measured.
-- **B Tone layer (on request, Q20):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref. The only mode where a region carries both a filter (correction) and GEQ points (taste) — intentional.
+- **B Tone layer (on request — the tone-control option, §1):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref. The only mode where a region carries both a filter (correction) and GEQ points (taste) — intentional.
 Rules: correction always in filters; GEQ may add preference and/or freeform on top; the same correction is never written twice; preference stays clamped to its §2 envelope tier; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if both A and B apply, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`); non-flat GEQ gets `# geq:` line(s) stating `layer=`.
 
-**Speaker delay (from Q4b):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
+**Speaker delay (from the speaker-distance answer, §1):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
 ```
 Channel: L
 Delay: 1.5 ms
@@ -181,7 +183,7 @@ Delay: 0 ms
 
 ## 7. SANITY CEILINGS (gear-derived — from the §2 headroom envelope, not constants)
 - **Boost ceilings come from the researched headroom envelope (§2)** and bind the *total* boost at each frequency (correction + preference + medical combined). Cap it at the device's clean limit there: where the gear takes less, the lower limit wins; where it takes more, you may exceed the generic backstop with a note. Never boost beyond clean excursion (esp. deep bass on a small/sealed/plugged transducer) — it adds distortion, not output; EQ the target down or suggest a subwoofer instead.
-- **The taste tier (Q18 × the §2 preference envelope) limits the preference layer only** — never correction or medical. (The headroom ceiling above limits every layer's boost; the taste tier *additionally* limits how far preference may colour.) It is a derived bound, not a constant: its value comes from documented preference research for the device class — or the audibility ladder when none exists — and its basis is recorded in `# preference_envelope:`. If the user asks why their taste move stopped at some dB, the answer is in that line, never "because the preset says so".
+- **The taste tier (strength answer × the §2 preference envelope) limits the preference layer only** — never correction or medical. (The headroom ceiling above limits every layer's boost; the taste tier *additionally* limits how far preference may colour.) It is a derived bound, not a constant: its value comes from documented preference research for the device class — or the audibility ladder when none exists — and its basis is recorded in `# preference_envelope:`. If the user asks why their taste move stopped at some dB, the answer is in that line, never "because the preset says so".
 - **Cuts don't stress the transducer**, so they aren't capability-bound — but a deep narrow cut (deeper than the measured null itself, or > ~−12 dB when there is no measurement) usually chases a room null EQ can't fill: flag, don't blindly apply.
 - **Fallback backstops — used only when §2 research came up empty:** absolute ±12 dB per single filter without a justified note (a guardrail, with a stated basis: a single move that size exceeds the documented preference spread plus typical correction magnitudes combined — needing it usually means chasing a null or redesigning the target, both of which deserve an explicit note); the audibility-anchored 2/4/6 dB taste tiers (§2). Last-resort floors, not targets.
 - **Fixed by design, not gear** (don't tie it to the chain): the digital anti-clip preamp margin (§4.5) — it protects signal headroom before the DAC, which is device-independent, and its 0.5/1.0 dB values are anchored to broadcast true-peak practice (~1 dBTP, EBU R128 / ATSC A/85), not chosen arbitrarily.
@@ -210,7 +212,7 @@ One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead 
 # intent: <fidelity | tuned>   (fidelity = correction only, preference layer zero — §1 rule)
 # fs: <48000> | basis=<user-stated | status-bar | assumed>   (the Fs every §4 number was computed at)
 # headroom: LF clean-boost ≈ +<x>dB, broadband ≈ ±<y>dB | basis=<driver/enclosure/THD data | class-inferred>  (sets §7 boost ceilings)
-# preference_envelope: <class spread, e.g. bass +2..+8 dB, treble ±3 dB> | tier=<gentle|moderate|strong ⇒ ±<z> dB> | basis=<Harman OE preference data | audibility-anchored | ...>  (sets the Q18 taste bound)
+# preference_envelope: <class spread, e.g. bass +2..+8 dB, treble ±3 dB> | tier=<gentle|moderate|strong ⇒ ±<z> dB> | basis=<Harman OE preference data | audibility-anchored | ...>  (sets the strength-question taste bound)
 # preamp_basis: combined_peak=<+x.x>dB@<freq>Hz (filters+GEQ) -> preamp=<-y.y>dB
 #
 # ---- FILTER RATIONALE ----
@@ -224,13 +226,13 @@ Channel: L R
 Filter 1: ON <type> Fc <hz> Hz Gain <dB> dB Q <q>
 Filter N: ...
 GraphicEQ: 20 0; 20000 0
-Channel: L                                                       # only if Q4b gave an asymmetric distance
+Channel: L                                                       # only if the speaker-distance answer was asymmetric
 Delay: <t> ms
 Channel: R
 Delay: 0 ms
 ```
 **Notes:**
-- **Never emit a `LoudnessCorrection:` line.** Quiet/background listeners (Q19) are served by RUMBLE's own Loudness feature (Settings) — a volume-linked ISO 226 implementation that tracks the actual playback level, which a static config line cannot; emitting both would double-compensate the same deficit. Recommend enabling it in the plain-language summary instead.
+- **Never emit a `LoudnessCorrection:` line.** Quiet/background listeners (the volume answer, §1) are served by RUMBLE's own Loudness feature (Settings) — a volume-linked ISO 226 implementation that tracks the actual playback level, which a static config line cannot; emitting both would double-compensate the same deficit. Recommend enabling it in the plain-language summary instead.
 - First six `#` lines = canonical header (keep exact form/order). Don't emit `# Readonly:`/`# Builtin:` (app-managed). Dates ISO. The v2 block carries chain/source_mode/target_curve/status/fs/headroom/preamp_basis (no app header field for these) and is the round-trip source of truth.
 - `Channel:` default stereo `L R`; mono `all` only if explicit. **Surround channel names (APO):** stereo `L R`; 5.1 `L R C LFE RL RR` (some devices report `SL SR` instead of `RL RR` — match what RUMBLE's channel preset/status bar shows); 7.1 `L R C LFE RL RR SL SR`. Surround rules: apply the correction to the main channels (one `Channel: L R C RL RR SL SR` style section, or `all` when genuinely uniform); **never apply full-range EQ or boosts to `LFE`** (it is band-limited by content and drivers — a full-range boost there only adds distortion); bass redirection/crossovers/sub feeds belong to RUMBLE's bass-management tool, not to this profile. `Device:` optional, normally omitted (never auto-`all`).
 - Filter line: `Filter n: ON|OFF <type> Fc <hz> Hz Gain <dB> dB Q <q>` (or `BW Oct <v>`, convertible via §4.6). **≤32 per section** (app cap; default 10).
@@ -246,7 +248,7 @@ Delay: 0 ms
 ## 9. VALIDATION (all pass before output)
 - [ ] Parametric output only — no fixed-band/grid rendering, no other-EQ export.
 - [ ] Target stated; correction = target − (measured | known deviations).
-- [ ] Layers in order; preference clamped to its Q18 tier of the recorded preference envelope; medical last as caps.
+- [ ] Layers in order; preference clamped to its strength tier of the recorded preference envelope; medical last as caps.
 - [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
 - [ ] Every taste move meets the ~2 dB audibility floor (§3) — sub-audible moves omitted, never scaled down.
 - [ ] Fidelity intent (if declared at any question) honoured: preference layer zero everywhere except reported-discomfort cuts, taste questions skipped, `# intent: fidelity` recorded.
@@ -269,7 +271,7 @@ Delay: 0 ms
 - [ ] User given a plain check (clip/A-B/re-measure, §13).
 
 ## 10. FLOW (skeleton)
-1. Interview → gear, pads/port, speaker distances, source, DAC/amp+mode, measurement?, sample rate?, use, character, F1/F3/F4/F6, medical, strength, volume, tone-control?.
+1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, source, DAC/amp+mode, measurement?, sample rate?, channels, use, genres, then the taste layer together (character/fidelity, F1/F3/F4/F6, strength), then medical, volume, tone-control?.
 2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom and preference envelopes (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class + character.
 4. correction (inverse deviations, or fit measurement §11) + clamped preference = total.
