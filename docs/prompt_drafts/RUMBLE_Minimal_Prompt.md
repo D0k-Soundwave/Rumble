@@ -12,26 +12,26 @@ Paste this into a small or local AI. It builds a RUMBLE (Equalizer APO) profile 
 - **Some problems aren't EQ — point at a RUMBLE feature instead (say it in the summary; never build these into the file).** Headphones feeling stuck "in your head" or hard-panned parts sounding unnatural → RUMBLE's Crossfeed (Settings). These are render-layer features, not filters.
 
 ## Ask (skip any that don't apply or are already answered)
-Order runs general → specific: the broad questions come first so their answers narrow or settle the specific ones (someone who says "warmer" has already leaned the bass up — confirm rather than re-ask).
+Keep it short — the default is the good, balanced sound, so you only need what they'd actually change.
 1. "Headphones, earphones, or speakers?"
 2. "What make and model? (Fine to skip.)" *(headphones/earphones + internet access → AutoEq lookup; otherwise name/tags only)*
-3. "Overall warmer, brighter, balanced — or just faithful to the recording?" *(faithful: with internet + a named model ⇒ AutoEq correction alone, no taste filters; offline ⇒ the fidelity rule above)*
-4. "More bass, less bass, or about right?"
-5. "Are voices clear and up-front, or distant — want more clarity?"
-6. "Does anything sound harsh or piercing — sharp 's'/cymbals, shouty middle, or boomy bass?"
-7. *(optional)* "Does the sound sit centered between left and right, or pull to one side? (Skip if centered.)"
-8. "Gentle, moderate, or strong change?"
-9. "Do you usually listen quietly (background level), or at normal/loud volume?"
-10. *(optional)* "Any hearing notes — ringing in the ears, one ear clearly worse than the other, trouble following speech in noise, hearing loss, or sound tiring you out?"
+3. "Is there anything about how it sounds you'd change — too boomy or too thin, anything sharp or harsh, voices hard to follow, or dull and muffled? (If it's basically fine, I'll just clean up your gear's known weak spots.)"
+4. *(optional)* "Does the sound sit centered between left and right, or pull to one side? (Skip if centered.)"
+5. "Do you usually listen quietly (background level), or at normal/loud volume?"
+6. *(optional)* "Any hearing notes — ringing in the ears, one ear clearly worse than the other, trouble following speech in noise, hearing loss, or sound tiring you out?"
 
-## Turn answers into filters (fixed frequencies, small gains)
-**If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published — the taste filters below are added AFTER them.** No data → the taste filters below are the whole profile.
-Strength sets the step size: **gentle = 2, moderate = 4, strong = 6 dB**. Never exceed ±6 for a taste filter (AutoEq's own values are kept as published).
-Pick only the taste filters the answers call for:
-- **More / less bass** → `LSC Fc 90 Hz Gain +step / -step Q 0.7`.
-- **Warmer** → `LSC 90 Hz +step` and `HSC 10000 Hz -step`. **Brighter** → `LSC 90 Hz -(half step)` and `HSC 10000 Hz +step`. **Balanced** → neither.
-- **More vocal clarity** → `PK Fc 2800 Hz Gain +step Q 1.0`.
-- **Harsh 's' / cymbals** → `PK 7000 Hz -step Q 2.5`. **Shouty middle** → `PK 3200 Hz -step Q 1.5`. **Boomy bass** → `PK 180 Hz -step Q 1.2`.
+## Turn answers into filters (fixed frequencies, full-strength moves)
+**If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published.** No complaint and no data → the AutoEq correction alone, or (offline) nothing to change — say so rather than invent a profile.
+**Every taste move is a FULL, clearly-audible step — about 4 dB, up to 6 for an emphatic complaint ("way too boomy"); never more than 6, never a timid 1–2.** There is NO "how strong?" question: a change too small to obviously hear would be done by hand in RUMBLE, not generated here.
+Add a filter ONLY for a change the user actually asked for (`step` = that full ~4 dB move):
+- **too boomy / muddy / too much bass** → `LSC 90 Hz -step Q 0.7`
+- **too thin / tinny / no weight** → `LSC 90 Hz +step Q 0.7`
+- **sharp / harsh 's' / cymbals** → `PK 7000 Hz -step Q 2.5`
+- **shouty / honky middle** → `PK 3200 Hz -step Q 1.5`
+- **voices buried / hard to follow** → `PK 2800 Hz +step Q 1.0`
+- **dull / muffled / no air** → `HSC 10000 Hz +step Q 0.7`
+- *(only if they volunteer a character)* **warmer** → `LSC 90 Hz +step` and `HSC 10000 Hz -step`; **brighter** → `HSC 10000 Hz +step`
+- **"it's fine" / nothing named** → no taste filters at all (the correction alone is the profile).
 - **Speakers only:** also add a gentle tilt — `LSC 90 Hz +2 Q 0.7` and `HSC 8000 Hz -2 Q 0.7` — and say the profile is generalised (the room matters more than the speaker; suggest measuring for accuracy). If they use a separate subwoofer, point them to RUMBLE's bass-management tool (crossover, sub level, delays) rather than EQ-ing it here.
 
 **Combining (do this before writing the file):**
