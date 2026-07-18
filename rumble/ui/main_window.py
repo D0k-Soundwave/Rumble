@@ -126,6 +126,11 @@ class MainWindow(QMainWindow):
         self._loaded_profile_id: str | None = None
         self._closing_to_quit = False
         self._safety_warning_shown = False
+        # The crossfeed mode the tray toggle restores when switched back on
+        # from Off -- seeded from the persisted mode so a user who left it on
+        # "global" gets "global" back, defaulting to "profile" otherwise.
+        persisted_cf_mode = str(self.manager.settings.get("crossfeed_mode", "profile"))
+        self._last_crossfeed_mode = persisted_cf_mode if persisted_cf_mode != "off" else "profile"
 
         self.setWindowTitle("RUMBLE")
         self.setWindowIcon(app_icon)
@@ -457,6 +462,9 @@ class MainWindow(QMainWindow):
         self.editor_panel.ab_compare_toggled.connect(self._on_ab_toggled)
         self.editor_panel.dirty.connect(self._on_editor_dirty)
         self.editor_panel.preview_only.connect(self._on_editor_preview_only)
+        self.editor_panel.crossfeed_mode_changed.connect(self._on_crossfeed_mode_changed)
+        self.editor_panel.set_crossfeed_mode(
+            str(self.manager.settings.get("crossfeed_mode", "profile")))
         # Undo/redo are keyboard-only (Ctrl+Z / Ctrl+Y); the Edit menu is their
         # only visible surface, so it follows the editor's history.
         self.editor_panel.history_changed.connect(self._on_editor_history_changed)
@@ -536,7 +544,8 @@ class MainWindow(QMainWindow):
         self.tray_icon.quit_requested.connect(self._quit_application)
         self.tray_icon.set_profiles(self.manager.list_profiles(), self._active_profile_id())
         self.tray_icon.set_bypassed(self.manager.is_bypassed())
-        self.tray_icon.set_crossfeed_state(bool(self.manager.settings.get("crossfeed_enabled", False)))
+        self.tray_icon.set_crossfeed_state(
+            str(self.manager.settings.get("crossfeed_mode", "profile")) != "off")
         self.tray_icon.show()
         self._refresh_tone_trim_ui()
 
@@ -853,13 +862,29 @@ class MainWindow(QMainWindow):
         self._refresh_auto_switch_ui()
 
     def _on_crossfeed_toggled(self, enabled: bool) -> None:
-        # Same "persist immediately, apply live" shape as _on_auto_switch_toggled
-        # -- crossfeed is a machine-level setting (B2), not gated by the
-        # Settings dialog's Save button when flipped from the tray.
-        self.manager.settings["crossfeed_enabled"] = enabled
+        # The tray quick toggle is a two-state view of the three-state
+        # crossfeed_mode: On restores the last non-off mode the user had
+        # (profile or global), Off parks it. The main-UI switch offers the
+        # full three-way choice; both go through _apply_crossfeed_mode so
+        # they stay in sync.
+        self._apply_crossfeed_mode(self._last_crossfeed_mode if enabled else "off")
+
+    def _on_crossfeed_mode_changed(self, mode: str) -> None:
+        # The main-UI source switch picked a mode directly.
+        self._apply_crossfeed_mode(mode)
+
+    def _apply_crossfeed_mode(self, mode: str) -> None:
+        # Single place the machine-level crossfeed source mode is changed:
+        # persist immediately, re-render live, and keep every surface (the
+        # editor switch, the tray two-state toggle) in sync -- same
+        # "persist immediately, apply live" shape as _on_auto_switch_toggled.
+        if mode != "off":
+            self._last_crossfeed_mode = mode
+        self.manager.settings["crossfeed_mode"] = mode
         self.manager.save()
         self.manager.refresh_render_layers()
-        self.tray_icon.set_crossfeed_state(enabled)
+        self.editor_panel.set_crossfeed_mode(mode)
+        self.tray_icon.set_crossfeed_state(mode != "off")
 
     def _on_listener_slot_changed(self, slot_id: int) -> None:
         self.manager.set_active_listener_slot(slot_id)
@@ -1985,7 +2010,14 @@ class MainWindow(QMainWindow):
         if new_settings.get("theme") != previous_theme:
             self._switch_theme(new_settings.get("theme"))
         self._refresh_listener_ui()
-        self.tray_icon.set_crossfeed_state(bool(new_settings.get("crossfeed_enabled", False)))
+        # A Reset can bring crossfeed_mode back to its default; re-sync both
+        # crossfeed surfaces from the now-updated setting (the dialog's own
+        # crossfeed card only edits the global value, not the mode).
+        cf_mode = str(self.manager.settings.get("crossfeed_mode", "profile"))
+        if cf_mode != "off":
+            self._last_crossfeed_mode = cf_mode
+        self.editor_panel.set_crossfeed_mode(cf_mode)
+        self.tray_icon.set_crossfeed_state(cf_mode != "off")
         # Render-layer settings (the listener-correction toggle, the ISO
         # 226 loudness toggle / reference phon, crossfeed) must take effect
         # on the LIVE chain immediately, not at the next activation.

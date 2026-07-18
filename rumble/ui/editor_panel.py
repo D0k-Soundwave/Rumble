@@ -211,6 +211,11 @@ class EditorPanel(QWidget):
     save_requested = Signal()
     bypass_requested = Signal(bool)
     clear_requested = Signal()
+    # The machine-level crossfeed SOURCE mode ("off"|"profile"|"global"),
+    # flipped by the switch on the crossfeed row. Global state owned by
+    # MainWindow, not part of any profile -- same relationship as the tone
+    # trim / bypass controls that live on the editor but drive the manager.
+    crossfeed_mode_changed = Signal(str)
     # A/B compare toggle: True = hold the saved profile audible, parking the
     # live preview of unsaved edits; False = resume the edited preview.
     ab_compare_toggled = Signal(bool)
@@ -687,22 +692,45 @@ class EditorPanel(QWidget):
         self.device_combo.setCurrentIndex(index)
 
     def _build_crossfeed_row(self) -> QWidget:
-        """A compact per-profile crossfeed control: enable + which cited
-        circuit + strength. Crossfeed is a property of THIS profile (it
-        travels with the file and switches when the profile does), so it lives
-        here in the editor rather than in global Settings."""
+        """The crossfeed row: a machine-level SOURCE switch (Off / Per profile
+        / Global) followed by this profile's OWN crossfeed value (enable +
+        which cited circuit + strength). The per-profile value travels with
+        the file and switches when the profile does; the switch decides which
+        value the engine actually renders, so both live together here."""
         row = QFrame()
         row.setObjectName("crossfeedRow")
         lay = QHBoxLayout(row)
         lay.setContentsMargins(dp(16, 8), dp(2, 1), dp(16, 8), dp(2, 1))
         lay.setSpacing(dp(8, 4))
 
-        self.chk_crossfeed = QCheckBox("Crossfeed")
+        lay.addWidget(QLabel("Crossfeed"))
+        self.combo_crossfeed_mode = QComboBox()
+        self.combo_crossfeed_mode.addItem("Off", "off")
+        self.combo_crossfeed_mode.addItem("Per profile", "profile")
+        self.combo_crossfeed_mode.addItem("Global", "global")
+        self.combo_crossfeed_mode.setCurrentIndex(
+            self.combo_crossfeed_mode.findData("profile"))
+        describe(self.combo_crossfeed_mode, "Crossfeed source",
+                 "When crossfeed applies, across all profiles: Off (never), "
+                 "Per profile (each profile uses its own value below, falling "
+                 "back to the global value in Settings when it has none), or "
+                 "Global (the Settings value overrides every profile). This is "
+                 "a machine-wide switch, not saved with the profile.")
+        self.combo_crossfeed_mode.currentIndexChanged.connect(self._on_crossfeed_mode_changed)
+        lay.addWidget(self.combo_crossfeed_mode)
+
+        sep = QFrame()
+        sep.setFrameShape(QFrame.Shape.VLine)
+        sep.setFrameShadow(QFrame.Shadow.Sunken)
+        lay.addWidget(sep)
+
+        self.chk_crossfeed = QCheckBox("This profile")
         describe(self.chk_crossfeed, "Crossfeed (this profile)",
                  "Mix a low-passed, attenuated, delayed copy of each channel "
                  "into the other so hard-panned headphone content sounds more "
-                 "natural and out-of-head. Saved with this profile; only works "
-                 "on a plain stereo layout.")
+                 "natural and out-of-head. Saved with this profile; applied "
+                 "when the switch is Per profile; only works on a plain stereo "
+                 "layout.")
         self.chk_crossfeed.toggled.connect(self._on_crossfeed_changed)
         lay.addWidget(self.chk_crossfeed)
 
@@ -787,6 +815,23 @@ class EditorPanel(QWidget):
         """This profile's edited crossfeed (None ⇒ off) — read by the main
         window for live preview and save."""
         return self._crossfeed_spec
+
+    def _on_crossfeed_mode_changed(self, *_args) -> None:
+        """Emit the picked source mode for MainWindow to persist and apply.
+        The switch is machine-level (not a profile edit), so this does NOT
+        mark the editor dirty; it fires even under _loading is False because
+        load_profile never touches this combo (see set_crossfeed_mode)."""
+        self.crossfeed_mode_changed.emit(
+            str(self.combo_crossfeed_mode.currentData() or "profile"))
+
+    def set_crossfeed_mode(self, mode: str) -> None:
+        """Reflect the machine-level crossfeed source mode into the switch
+        without emitting (MainWindow owns the value and calls this to sync)."""
+        idx = self.combo_crossfeed_mode.findData(mode)
+        self.combo_crossfeed_mode.blockSignals(True)
+        self.combo_crossfeed_mode.setCurrentIndex(idx if idx >= 0 else
+                                                  self.combo_crossfeed_mode.findData("profile"))
+        self.combo_crossfeed_mode.blockSignals(False)
 
     def _on_preamp_changed(self, _value: float) -> None:
         if not self.btn_auto_preamp.isChecked():
