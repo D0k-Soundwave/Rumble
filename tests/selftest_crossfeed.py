@@ -127,7 +127,7 @@ def test_only_linkwitz_emits_a_delay_line():
     assert "Delay: 0.3 ms" in linkwitz_block
 
 
-# ── render_block() dispatch, Custom mode, Soundstage Blend mode ────────
+# ── render_block() dispatch, Custom mode ───────────────────────────────
 
 def test_render_block_matches_render_crossfeed_block_for_named_presets():
     for name in crossfeed.PRESETS:
@@ -164,63 +164,6 @@ def test_custom_mode_defaults_without_settings():
     block = crossfeed.render_block("custom", 100.0, {})
     parsed = apo_config.parse_config(block)
     assert abs(parsed.channel_sections[0].preamp_db - (-6.0)) < 0.05
-
-
-def test_soundstage_block_zero_blend_is_empty():
-    assert crossfeed.render_soundstage_block(0.0, 50.0) == ""
-    assert crossfeed.render_block(
-        "soundstage", 100.0, {"crossfeed_soundstage_blend": 0}) == ""
-
-
-def test_soundstage_block_shape_and_defaults():
-    block = crossfeed.render_soundstage_block(20.0, 50.0)
-    assert "Copy: M=0.4500*L+0.4500*R" in block
-    assert "Copy: S=0.4500*L-0.4500*R" in block
-    assert "Channel: S" in block
-    assert "Copy: L=1.0000*M+1.0000*S R=1.0000*M-1.0000*S" in block
-    parsed = apo_config.parse_config(block)
-    section = parsed.channel_sections[0]
-    assert section.channel == "S"
-    assert len(section.filters) == 1
-    assert section.filters[0].type == "LS"
-    # blend=20% -> -6 dB (FFmpeg's own strength=0.2 -> -30*0.2 dB)
-    assert abs(section.filters[0].gain - (-6.0)) < 0.05
-    # width=50% -> Fc = (1-0.5)*2100 = 1050 Hz
-    assert abs(section.filters[0].fc - 1050.0) < 0.5
-
-
-def test_soundstage_block_bakes_in_ffmpegs_own_level_in_attenuation():
-    # Confirmed against FFmpeg's own af_crossfeed.c: level_in=0.9/level_out=1.0
-    # is FFmpeg's own default and gives a genuine, permanent ~0.9x net gain
-    # even with the shelf itself contributing nothing -- not an attenuation
-    # this port introduced. Regression guard for that documented finding: the
-    # M/S encode coefficient (0.5 * SOUNDSTAGE_LEVEL_IN) times the decode
-    # coefficient (SOUNDSTAGE_LEVEL_OUT) must equal 0.9 * 0.5, i.e. a
-    # bypass (mid + side, unfiltered) round-trip nets exactly 0.9x = -0.92 dB.
-    import math
-    m_coeff = 0.5 * crossfeed.SOUNDSTAGE_LEVEL_IN
-    bypass_gain_linear = 2 * m_coeff * crossfeed.SOUNDSTAGE_LEVEL_OUT  # mid+side recombine, L+R terms cancel
-    assert abs(bypass_gain_linear - 0.9) < 1e-9
-    bypass_gain_db = 20.0 * math.log10(bypass_gain_linear)
-    assert abs(bypass_gain_db - (-0.9151)) < 0.001
-
-
-def test_soundstage_block_width_moves_the_cutoff():
-    narrow = apo_config.parse_config(
-        crossfeed.render_soundstage_block(20.0, 0.0)
-    ).channel_sections[0].filters[0].fc
-    wide = apo_config.parse_config(
-        crossfeed.render_soundstage_block(20.0, 100.0)
-    ).channel_sections[0].filters[0].fc
-    assert narrow == 2100.0
-    assert wide == 1.0  # clamped away from literal 0 Hz
-    assert wide < narrow
-
-
-def test_render_block_soundstage_reads_settings():
-    settings = {"crossfeed_soundstage_blend": 20, "crossfeed_soundstage_width": 50}
-    assert crossfeed.render_block("soundstage", 100.0, settings) == \
-        crossfeed.render_soundstage_block(20.0, 50.0)
 
 
 # ── round trip through apo_config ───────────────────────────────────────
@@ -411,22 +354,6 @@ def test_custom_mode_ignores_leftover_zero_strength():
         mgr.settings["crossfeed_custom_gain_db"] = -8.0
         body = mgr._render_layered_body(_stereo_config())
         assert "Channel: XL XR" in body
-
-
-def test_soundstage_mode_gates_on_its_own_blend_not_strength():
-    with tempfile.TemporaryDirectory() as tmp:
-        mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
-        mgr.settings["crossfeed_preset"] = "soundstage"
-        mgr.settings["crossfeed_strength"] = 100  # irrelevant to soundstage
-        mgr.settings["crossfeed_soundstage_blend"] = 0
-        config = _stereo_config()
-        without = apo_config.render_config_body(mgr._apply_render_layers(config))
-        assert mgr._render_layered_body(config) == without  # blend=0 -> no block
-
-        mgr.settings["crossfeed_soundstage_blend"] = 20
-        body = mgr._render_layered_body(config)
-        assert "Channel: S" in body
 
 
 def test_preview_config_carries_the_block():

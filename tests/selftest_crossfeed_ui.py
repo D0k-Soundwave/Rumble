@@ -135,7 +135,7 @@ def combo_offers_all_six_modes() -> None:
     dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
     keys = [dlg.combo_crossfeed_preset.itemData(i)
             for i in range(dlg.combo_crossfeed_preset.count())]
-    expect(keys == ["chumoy", "meier", "linkwitz", "bauer", "direct", "custom", "soundstage"],
+    expect(keys == ["chumoy", "meier", "linkwitz", "bauer", "direct", "custom"],
            f"unexpected preset combo contents: {keys!r}")
 
 
@@ -149,34 +149,19 @@ def mode_switch_shows_only_the_matching_control_group() -> None:
     select("chumoy")
     expect(not dlg.slider_crossfeed_strength.isHidden(), "Strength shown for a named preset")
     expect(dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls hidden for a named preset")
-    expect(dlg.slider_crossfeed_soundstage_blend.isHidden(),
-           "Soundstage controls hidden for a named preset")
 
     select("custom")
     expect(dlg.slider_crossfeed_strength.isHidden(), "Strength hidden for Custom")
     expect(not dlg.spin_crossfeed_custom_gain.isHidden(), "Custom controls shown for Custom")
     expect(not dlg.spin_crossfeed_custom_freq.isHidden(), "Custom cutoff shown for Custom")
     expect(not dlg.spin_crossfeed_custom_delay.isHidden(), "Custom delay shown for Custom")
-    expect(dlg.slider_crossfeed_soundstage_blend.isHidden(),
-           "Soundstage controls hidden for Custom")
-
-    select("soundstage")
-    expect(dlg.slider_crossfeed_strength.isHidden(), "Strength hidden for Soundstage Blend")
-    expect(dlg.spin_crossfeed_custom_gain.isHidden(),
-           "Custom controls hidden for Soundstage Blend")
-    expect(not dlg.slider_crossfeed_soundstage_blend.isHidden(), "Blend shown for Soundstage Blend")
-    expect(not dlg.slider_crossfeed_soundstage_width.isHidden(), "Width shown for Soundstage Blend")
 
 
-def save_round_trips_custom_and_soundstage_settings() -> None:
+def save_round_trips_custom_settings() -> None:
     dlg = SettingsDialog(dict(DEFAULT_SETTINGS), THEMES[DEFAULT_THEME_NAME], tmp_data_dir())
     dlg.spin_crossfeed_custom_gain.setValue(-11.5)
     dlg.spin_crossfeed_custom_freq.setValue(900.0)
     dlg.spin_crossfeed_custom_delay.setValue(150.0)
-    dlg.slider_crossfeed_soundstage_blend.setValue(35)
-    dlg.slider_crossfeed_soundstage_width.setValue(70)
-    expect(dlg.lbl_crossfeed_soundstage_blend.text() == "35%", "blend value label follows the slider")
-    expect(dlg.lbl_crossfeed_soundstage_width.text() == "70%", "width value label follows the slider")
 
     emitted = []
     dlg.settings_saved.connect(emitted.append)
@@ -185,28 +170,6 @@ def save_round_trips_custom_and_soundstage_settings() -> None:
     expect(emitted[0]["crossfeed_custom_gain_db"] == -11.5, "custom gain saved")
     expect(emitted[0]["crossfeed_custom_freq_hz"] == 900.0, "custom cutoff saved")
     expect(emitted[0]["crossfeed_custom_delay_us"] == 150.0, "custom delay saved")
-    expect(emitted[0]["crossfeed_soundstage_blend"] == 35, "soundstage blend saved")
-    expect(emitted[0]["crossfeed_soundstage_width"] == 70, "soundstage width saved")
-
-
-def dialog_soundstage_mode_reaches_a_live_rerender() -> None:
-    manager = make_active_stereo_manager()
-    dlg = SettingsDialog(dict(manager.settings), THEMES[DEFAULT_THEME_NAME], manager.data_dir,
-                          active_profile_is_stereo=True)
-    dlg.chk_crossfeed_enabled.setChecked(True)
-    idx = dlg.combo_crossfeed_preset.findData("soundstage")
-    dlg.combo_crossfeed_preset.setCurrentIndex(idx)
-    dlg.slider_crossfeed_soundstage_blend.setValue(20)
-
-    emitted = []
-    dlg.settings_saved.connect(emitted.append)
-    dlg._apply_now()
-
-    manager.settings.update(emitted[0])
-    expect(manager.refresh_render_layers() is True, "refresh succeeds with an active stereo profile")
-    text = active_pointer_text(manager)
-    expect("Channel: S" in text, "the live-rerendered active pointer carries the soundstage block")
-    expect("Copy: M=" in text, "soundstage mid/side copy lines present in the live render")
 
 
 # ── non-stereo active profile gates the section ──────────────────────────
@@ -438,10 +401,7 @@ def main() -> int:
     step("the preset combo offers all six modes", combo_offers_all_six_modes)
     step("switching preset mode shows only the matching control group",
          mode_switch_shows_only_the_matching_control_group)
-    step("Save round-trips Custom and Soundstage Blend settings",
-         save_round_trips_custom_and_soundstage_settings)
-    step("selecting Soundstage Blend and applying it triggers a live re-render",
-         dialog_soundstage_mode_reaches_a_live_rerender)
+    step("Save round-trips Custom settings", save_round_trips_custom_settings)
     step("toggling crossfeed on through the dialog and applying it triggers a live re-render",
          dialog_toggle_reaches_a_live_rerender)
     step("leaving crossfeed disabled in the dialog keeps the live render crossfeed-free",

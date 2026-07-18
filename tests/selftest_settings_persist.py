@@ -105,8 +105,6 @@ def main() -> int:
         "crossfeed_custom_gain_db": -11.5,
         "crossfeed_custom_freq_hz": 900.0,
         "crossfeed_custom_delay_us": 150.0,
-        "crossfeed_soundstage_blend": 35,
-        "crossfeed_soundstage_width": 70,
         "device_profile_assignments": {"{some-endpoint-guid}": "my_profile"},
     }
     check(set(overrides) == set(DEFAULT_SETTINGS),

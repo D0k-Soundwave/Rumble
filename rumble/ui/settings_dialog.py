@@ -818,7 +818,6 @@ class SettingsDialog(FramelessDialog):
         for key, preset in crossfeed.PRESETS.items():
             self.combo_crossfeed_preset.addItem(preset.label, key)
         self.combo_crossfeed_preset.addItem("Custom", "custom")
-        self.combo_crossfeed_preset.addItem("Soundstage Blend", "soundstage")
         current_crossfeed_preset = str(
             self._working.get("crossfeed_preset", crossfeed.DEFAULT_PRESET))
         preset_idx = self.combo_crossfeed_preset.findData(current_crossfeed_preset)
@@ -829,9 +828,8 @@ class SettingsDialog(FramelessDialog):
         describe(self.combo_crossfeed_preset, "Crossfeed preset",
                  "Which crossfeed to model: Chu Moy, Jan Meier, Bauer (bs2b's "
                  "own default), a Linkwitz-style design with an explicit "
-                 "interaural delay, an unfiltered Direct Blend, your own "
-                 "Custom gain/cutoff/delay, or a Soundstage Blend that widens "
-                 "or narrows the stereo image directly.")
+                 "interaural delay, an unfiltered Direct Blend, or your own "
+                 "Custom gain/cutoff/delay.")
         cf.add_row("Preset:", self.combo_crossfeed_preset)
 
         strength_row = QHBoxLayout()
@@ -900,47 +898,6 @@ class SettingsDialog(FramelessDialog):
         custom_widgets += _hideable_row("Delay:", self.spin_crossfeed_custom_delay)
         self._crossfeed_custom_widgets = tuple(custom_widgets)
 
-        # Soundstage Blend mode: two independent axes instead of Strength.
-        self.slider_crossfeed_soundstage_blend = QSlider(Qt.Orientation.Horizontal)
-        self.slider_crossfeed_soundstage_blend.setRange(0, 100)
-        self.slider_crossfeed_soundstage_blend.setValue(
-            int(self._working.get("crossfeed_soundstage_blend", 20)))
-        self.slider_crossfeed_soundstage_blend.valueChanged.connect(
-            self._update_crossfeed_soundstage_blend_label)
-        self.slider_crossfeed_soundstage_blend.valueChanged.connect(self._schedule_apply)
-        describe(self.slider_crossfeed_soundstage_blend, "Soundstage Blend amount",
-                 "How strongly the mid-side low-shelf blend narrows the "
-                 "stereo image, from 0% (no effect) to 100%.")
-        self.lbl_crossfeed_soundstage_blend = QLabel()
-        self.lbl_crossfeed_soundstage_blend.setFixedWidth(48)
-        self.lbl_crossfeed_soundstage_blend.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._update_crossfeed_soundstage_blend_label(
-            self.slider_crossfeed_soundstage_blend.value())
-        soundstage_widgets = list(_hideable_row(
-            "Blend:", self.slider_crossfeed_soundstage_blend,
-            self.lbl_crossfeed_soundstage_blend))
-
-        self.slider_crossfeed_soundstage_width = QSlider(Qt.Orientation.Horizontal)
-        self.slider_crossfeed_soundstage_width.setRange(0, 100)
-        self.slider_crossfeed_soundstage_width.setValue(
-            int(self._working.get("crossfeed_soundstage_width", 50)))
-        self.slider_crossfeed_soundstage_width.valueChanged.connect(
-            self._update_crossfeed_soundstage_width_label)
-        self.slider_crossfeed_soundstage_width.valueChanged.connect(self._schedule_apply)
-        describe(self.slider_crossfeed_soundstage_width, "Soundstage Blend width",
-                 "Soundstage wideness for the Blend mode -- higher values "
-                 "push the low-shelf cutoff lower, widening the perceived "
-                 "stage.")
-        self.lbl_crossfeed_soundstage_width = QLabel()
-        self.lbl_crossfeed_soundstage_width.setFixedWidth(48)
-        self.lbl_crossfeed_soundstage_width.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._update_crossfeed_soundstage_width_label(
-            self.slider_crossfeed_soundstage_width.value())
-        soundstage_widgets += _hideable_row(
-            "Width:", self.slider_crossfeed_soundstage_width,
-            self.lbl_crossfeed_soundstage_width)
-        self._crossfeed_soundstage_widgets = tuple(soundstage_widgets)
-
         self.btn_insert_crossfeed = QPushButton("Insert into profile…")
         self.btn_insert_crossfeed.clicked.connect(self.insert_crossfeed_requested)
         describe(self.btn_insert_crossfeed, "Insert crossfeed into profile",
@@ -958,8 +915,6 @@ class SettingsDialog(FramelessDialog):
             self.slider_crossfeed_strength, self.btn_insert_crossfeed,
             self.spin_crossfeed_custom_gain, self.spin_crossfeed_custom_freq,
             self.spin_crossfeed_custom_delay,
-            self.slider_crossfeed_soundstage_blend,
-            self.slider_crossfeed_soundstage_width,
         )
         self.lbl_crossfeed_nonstereo = QLabel(
             "The active profile has no left/right channels for crossfeed to "
@@ -998,24 +953,16 @@ class SettingsDialog(FramelessDialog):
     def _update_crossfeed_strength_label(self, value: int) -> None:
         self.lbl_crossfeed_strength.setText(f"{value}%")
 
-    def _update_crossfeed_soundstage_blend_label(self, value: int) -> None:
-        self.lbl_crossfeed_soundstage_blend.setText(f"{value}%")
-
-    def _update_crossfeed_soundstage_width_label(self, value: int) -> None:
-        self.lbl_crossfeed_soundstage_width.setText(f"{value}%")
-
     def _update_crossfeed_mode_visibility(self, *_args) -> None:
-        """Strength applies to every named PRESETS entry; Custom and
-        Soundstage Blend are settings-driven with their own controls
-        instead (crossfeed.render_block()'s dispatch) -- show only the row
+        """Strength applies to every named PRESETS entry; Custom is
+        settings-driven with its own controls instead
+        (crossfeed.render_block()'s dispatch) -- show only the row
         group that matches whichever preset is currently selected."""
         mode = str(self.combo_crossfeed_preset.currentData() or crossfeed.DEFAULT_PRESET)
         for widget in self._crossfeed_strength_widgets:
-            widget.setVisible(mode not in ("custom", "soundstage"))
+            widget.setVisible(mode != "custom")
         for widget in self._crossfeed_custom_widgets:
             widget.setVisible(mode == "custom")
-        for widget in self._crossfeed_soundstage_widgets:
-            widget.setVisible(mode == "soundstage")
 
     def _apply_crossfeed_stereo_gate(self, is_stereo: bool) -> None:
         """Soft-disable the crossfeed controls (values kept, not reset) when
@@ -2175,8 +2122,6 @@ class SettingsDialog(FramelessDialog):
         self._working["crossfeed_custom_gain_db"] = self.spin_crossfeed_custom_gain.value()
         self._working["crossfeed_custom_freq_hz"] = self.spin_crossfeed_custom_freq.value()
         self._working["crossfeed_custom_delay_us"] = self.spin_crossfeed_custom_delay.value()
-        self._working["crossfeed_soundstage_blend"] = self.slider_crossfeed_soundstage_blend.value()
-        self._working["crossfeed_soundstage_width"] = self.slider_crossfeed_soundstage_width.value()
         self._collect_device_assignments()
 
     def result_settings(self) -> dict:

@@ -430,10 +430,6 @@ never a licensed/bundled HRTF dataset:
   so 100% reproduces the preset exactly and 0% is silently skipped.
 - **Custom mode** — user-set gain/frequency/delay, rendered at full strength
   (no separate scalar on top).
-- **Soundstage mode** — a distinct algorithm: mid-side decomposition
-  (M=(L+R)/2, S=(L−R)/2) with a low-shelf *cut* on the side channel only,
-  ported directly from FFmpeg's `af_crossfeed` filter math (RBJ low-shelf
-  coefficients, `gain = -30·strength`, `Fc = (1-range)·2100 Hz`).
 - Applies only to profiles whose channel layout actually carries both L and R
   (`can_crossfeed`); rendered as raw text appended after the composed profile
   body, never stored in the profile file itself.

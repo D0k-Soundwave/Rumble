@@ -453,11 +453,6 @@ DEFAULT_SETTINGS: dict = {
     "crossfeed_custom_gain_db": -6.0,
     "crossfeed_custom_freq_hz": 700.0,
     "crossfeed_custom_delay_us": 300.0,
-    # "soundstage" preset mode: FFmpeg af_crossfeed-derived mid-side blend
-    # (crossfeed.render_soundstage_block()). Defaults match FFmpeg's own
-    # documented strength/range defaults (0.2/0.5 -> 20%/50%).
-    "crossfeed_soundstage_blend": 20,
-    "crossfeed_soundstage_width": 50,
     # D1 (docs/superpowers/plans/2026-07-11-adaptive-frontend-roadmap.md):
     # endpoint GUID (audio_devices.ApoDevice.guid shape) -> profile id.
     # Unassigned endpoints follow the global active profile -- current
@@ -1939,17 +1934,15 @@ class ProfileManager:
 
         The "could produce a block" scalar to check depends on the selected
         mode: only named PRESETS entries scale off the overall
-        crossfeed_strength. "custom" and "soundstage" are settings-driven
+        crossfeed_strength. "custom" is settings-driven
         (crossfeed.render_block()'s own dispatch) and strength-independent --
-        checking crossfeed_strength for them would leave crossfeed silently
+        checking crossfeed_strength for it would leave crossfeed silently
         inert whenever a leftover strength value from a previously-selected
-        named preset (the Strength slider is hidden, not reset, for these two
-        modes) happened to still be saved as 0."""
+        named preset (the Strength slider is hidden, not reset, for Custom)
+        happened to still be saved as 0."""
         if not bool(self.settings.get("crossfeed_enabled")):
             return False
         mode = self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)
-        if mode == "soundstage":
-            return float(self.settings.get("crossfeed_soundstage_blend", 0)) > 0.0
         if mode == "custom":
             return True
         return float(self.settings.get("crossfeed_strength", 0)) > 0.0
@@ -2157,7 +2150,7 @@ class ProfileManager:
             self, config: "apo_config.ProfileConfig") -> "apo_config.ProfileConfig":
         """Writes the CURRENT machine-level crossfeed settings (preset,
         strength, and any mode-specific settings crossfeed.render_block()
-        reads for "custom"/"soundstage") into *config* as real, portable APO
+        reads for "custom") into *config* as real, portable APO
         text -- the "Insert into profile..." escape hatch (roadmap B2), same
         shape as bake_session_trim()'s (B1) escape hatch. Appended to
         config.extra_lines rather than composed through ProfileConfig's

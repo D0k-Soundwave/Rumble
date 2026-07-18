@@ -81,7 +81,7 @@ _FEATURES: list[tuple[str, str, str]] = [
      "listening, bakeable into a profile when you want to keep it."),
     ("link", "Headphone crossfeed",
      "Five cited classic circuits (Chu Moy, Meier, Linkwitz, Bauer/bs2b) "
-     "plus a custom mode and an FFmpeg-derived soundstage blend."),
+     "plus a custom mode."),
     ("settings", "Bass management & crossovers",
      "Linkwitz-Riley crossover design, sub/mains bass redirection, and "
      "mic-measured multi-speaker time alignment."),

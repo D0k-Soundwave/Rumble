@@ -80,8 +80,6 @@ RESET_GROUPS: tuple[ResetGroup, ...] = (
             "crossfeed_custom_gain_db",
             "crossfeed_custom_freq_hz",
             "crossfeed_custom_delay_us",
-            "crossfeed_soundstage_blend",
-            "crossfeed_soundstage_width",
             "iso226_loudness_enabled",
             "iso226_reference_phon",
             "profile_loudness_matching",

@@ -194,83 +194,12 @@ def render_crossfeed_block(preset: str, strength: float) -> str:
     return _render_gain_filter_delay_block(PRESETS[preset], strength)
 
 
-# FFmpeg's af_crossfeed filter (libavfilter/af_crossfeed.c, part of the
-# open-source FFmpeg project -- https://ffmpeg.org/ffmpeg-filters.html#crossfeed)
-# takes a different approach from the gain/LP/delay presets above: mid-side
-# decomposition (M = (L+R)/2, S = (L-R)/2) with a low-shelf CUT on the side
-# channel only. Cutting S at LOW frequencies while leaving high frequencies
-# alone makes bass more mono while treble stays separated -- the same
-# "bass crosses over, treble stays isolated" physical rationale the gain/LP
-# presets above use (a speaker listener's head shadows treble from the far
-# speaker far more than it shadows bass), just implemented as a shelf on the
-# difference signal instead of a low-pass on a cross-mixed copy.
-#
-# FFmpeg's own coefficient math (RBJ Audio EQ Cookbook low-shelf form,
-# audio-eq-cookbook -- the b0/b1/b2 shape in af_crossfeed.c's coeff_speex()
-# is exactly RBJ's lowShelf formulas):
-#   gain_dB = strength * -30                      (strength 0-1, default 0.2)
-#   A       = 10 ** (gain_dB / 40)
-#   Fc      = (1 - range) * 2100 Hz                (range 0-1 "wideness", default 0.5)
-#   Q       = 1 / sqrt((A + 1/A) * (1/slope - 1) + 2)
-# BLEND (0-100%) below maps to FFmpeg's strength; WIDTH (0-100%) maps to
-# FFmpeg's range. slope/level_in/level_out are fixed at FFmpeg's own defaults
-# since they aren't exposed as their own controls here; level_in/level_out
-# are folded directly into the Copy: coefficients.
-SOUNDSTAGE_MAX_GAIN_DB = -30.0     # FFmpeg's own strength=1 ceiling
-SOUNDSTAGE_CENTER_HZ = 2100.0       # FFmpeg's own range=0 ceiling frequency
-SOUNDSTAGE_SLOPE = 0.5               # FFmpeg's own default slope (not exposed)
-SOUNDSTAGE_LEVEL_IN = 0.9            # FFmpeg's own default level_in
-SOUNDSTAGE_LEVEL_OUT = 1.0            # FFmpeg's own default level_out
-# Confirmed against FFmpeg's own af_crossfeed.c (filter_frame(): mid/side are
-# built as `(L+-R) * level_in * .5` and reconstructed as `(mid +- oside) *
-# level_out`, with no compensation anywhere in the biquad coefficients) --
-# level_in=0.9/level_out=1.0 bakes in a genuine, permanent ~0.9x
-# (-0.92 dB) net gain versus the other crossfeed presets above, even at
-# blend=0 (shelf at 0 dB). This is FFmpeg's own upstream default behaviour,
-# not an attenuation this port introduced -- left unchanged for parity with
-# the algorithm this mode is named after, rather than "corrected" into a
-# different filter.
-
-
-def render_soundstage_block(blend_pct: float, width_pct: float) -> str:
-    """Mid-side low-shelf blend per FFmpeg's af_crossfeed algorithm -- see
-    the module comment above SOUNDSTAGE_MAX_GAIN_DB for the source and the
-    BLEND/WIDTH parameter mapping. Returns "" at blend<=0, the same
-    "nothing to render" convention _render_gain_filter_delay_block() uses."""
-    blend = max(0.0, min(100.0, blend_pct)) / 100.0
-    width = max(0.0, min(100.0, width_pct)) / 100.0
-    if blend <= 0.0:
-        return ""
-    gain_db = blend * SOUNDSTAGE_MAX_GAIN_DB
-    fc = max(1.0, (1.0 - width) * SOUNDSTAGE_CENTER_HZ)
-    a = 10.0 ** (gain_db / 40.0)
-    q = 1.0 / math.sqrt((a + 1.0 / a) * (1.0 / SOUNDSTAGE_SLOPE - 1.0) + 2.0)
-    shelf = Filter(type="LS", fc=fc, gain=gain_db, q=q)
-    m_coeff = 0.5 * SOUNDSTAGE_LEVEL_IN
-    lines = [
-        f"Copy: M={m_coeff:.4f}*L+{m_coeff:.4f}*R",
-        f"Copy: S={m_coeff:.4f}*L-{m_coeff:.4f}*R",
-        "",
-        "Channel: S",
-        shelf.to_line(1),
-        "",
-        f"Copy: L={SOUNDSTAGE_LEVEL_OUT:.4f}*M+{SOUNDSTAGE_LEVEL_OUT:.4f}*S "
-        f"R={SOUNDSTAGE_LEVEL_OUT:.4f}*M-{SOUNDSTAGE_LEVEL_OUT:.4f}*S",
-        "",
-    ]
-    return "\n".join(lines)
-
-
 def render_block(mode: str, strength: float, settings: Mapping[str, object]) -> str:
     """Single dispatch entry point for both of ProfileManager's render call
-    sites. "soundstage" and "custom" are settings-driven modes with no
-    PRESETS entry of their own; any other *mode* is looked up in PRESETS and
-    rendered exactly as render_crossfeed_block() always has (settings is
-    ignored on that path, same behaviour as before this function existed)."""
-    if mode == "soundstage":
-        return render_soundstage_block(
-            float(settings.get("crossfeed_soundstage_blend", 20.0)),
-            float(settings.get("crossfeed_soundstage_width", 50.0)))
+    sites. "custom" is a settings-driven mode with no PRESETS entry of its
+    own; any other *mode* is looked up in PRESETS and rendered exactly as
+    render_crossfeed_block() always has (settings is ignored on that path,
+    same behaviour as before this function existed)."""
     if mode == "custom":
         spec = CrossfeedPreset(
             label="Custom",
