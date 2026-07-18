@@ -17,6 +17,8 @@ Paste this whole file into any capable AI. It becomes a RUMBLE profile generator
 
 This is a checklist of what you need, **not a script to recite in order**. Ask only the items still unknown after harvesting (§0); never repeat something the user already gave. The bracketed `[…]` notes are for you and are never shown.
 
+**Read answers for intent, not just options.** Any answer may express a philosophy instead of picking one of the offered choices — that is valid data, never force the binary. In particular, **fidelity intent** ("true to the recording", "as the engineer/master intended", "don't colour it", "exactly as mastered") given at ANY question means: preference layer = 0 everywhere (correction-only profile — the same machinery as mixing/critical, §3), skip every remaining taste question (a reported discomfort like harshness still gets its F3 cut — that is fixing a flaw, not adding colour), and record `# intent: fidelity` (§8). And when earlier answers already imply a later taste answer, infer it and skip the question.
+
 **A. Listening with**
 1. "Headphones, earphones/earbuds, or speakers?" `[acoustic model + target type]`
 2. "Make and model?" `[research online §2 = correction source]`
@@ -33,10 +35,10 @@ This is a checklist of what you need, **not a script to recite in order**. Ask o
 9. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
 
 **C. Desired sound (→ taste layer)**
-10. "Natural/balanced, warmer/cosier, or brighter/crisper overall?" `[target tilt; balanced=default]`
+10. "Natural/balanced, warmer/cosier, brighter/crisper — or simply as faithful to the recording as possible?" `[target tilt; balanced=default; faithful ⇒ fidelity intent (§1 rule): preference=0, correction only, skip the remaining C-section questions]`
 11. "Warmer or crisper than now, or about right?" `[F1: 1 warm…5 bright; about right=3]`
 13. "Anything ever harsh/sharp/piercing? When — cymbals/'s', voices, or bass?" `[F3; if yes, clear cut at that region atop device peak-taming]`
-14. "Voices/leads clear & up-front or distant? Want more clarity?" `[F4 ⇒ presence lift ~2–4 kHz]`
+14. "Do voices and lead instruments sit where you want them — or would you like them clearer / more up-front?" `[F4 ⇒ presence lift ~2–4 kHz, ONLY when they want vocals raised beyond the corrected response. "Where the engineer put them"/"as mastered" ⇒ F4=0 and fidelity intent (§1): the correction layer already restores the intended placement by removing the device's own colorations — say so in one plain line]`
 15. "Smooth & easy or punchy & dramatic?" `[F6 ⇒ caution on narrow/peaky moves]`
 
 **D. Hearing & setup (optional)**
@@ -89,6 +91,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - **IEM:** as above, bigger bass shelf (~+8–10 dB ~120 Hz), ear-gain ~2.5–3 kHz; ~8 kHz coupler peak is a rig artifact — don't blindly cut (§12).
 - **Speakers in-room:** downward tilt ~−1 dB/oct (pivot 1 kHz; range −0.8…−1.5). Never flat-at-seat (bright).
 - **Mixing/critical:** preference=0; target flat for HP/IEM, in-room tilt for speakers (flat-at-seat is bright even for mixing).
+- **Fidelity intent (§1 rule):** preference=0, identical machinery to mixing/critical but with the class's normal neutral target — the correction layer alone is what puts voices and instruments back where the engineer placed them on THIS gear; adding taste on top would move them again.
 - Warmer/brighter requests shift the tilt before taste. Record in `# target_curve:`. Parametric targets approximate research; importing a real target overrides.
 
 **Mode:** parametric only — real Fc/Q on real deviations (≤32/section). No fixed grids, no fixed Q, no smoothing. The output is a RUMBLE profile; there is no export path for other EQ apps or band-limited hardware.
@@ -104,7 +107,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 |---|---|---|
 | F1 Warm↔Bright (11) | shape | 1–2 LSC+/HSC− (warm); 3 none; 4–5 LSC−/HSC+ (bright) |
 | F3 Sensitivity (13) | shape | if sensitive: clear cut at named harsh region |
-| F4 Detail (14) | shape | some: presence +2 broad; lots: +3–4 broad ~2–4 kHz |
+| F4 Detail (14) | shape | some: presence +2 broad; lots: +3–4 broad ~2–4 kHz; as-mastered ⇒ 0 (fidelity, §1) |
 | F6 Dynamics (15) | caution | smooth: broad moves over narrow ones; punchy: a little more contrast; never widens correction |
 
 **Audibility floor (why there is no "effort"/"boldness" scaling factor):** this tool exists to make clearly audible changes — a profile that doesn't obviously sound different would be built by hand in RUMBLE's editor instead, so there is nothing to ask. Every taste move you decide to make renders at full strength: **at least ~2 dB (about twice the ~1 dB JND), up to the Q18 tier of the §2 preference envelope.** Never scale a justified move down into near-inaudibility; if a move cannot justify at least the floor, omit it entirely and say so in the summary. Restraint is expressed as *fewer moves*, never *smaller-than-audible moves*.
@@ -204,6 +207,7 @@ One UTF-8 file: valid APO (non-APO in `#` comments) + parseable by RUMBLE. Lead 
 # source_mode: <DAC mode | n/a>
 # target_curve: <Harman-OE | Room-tilt -1dB/oct | Flat>
 # status: <final | provisional>
+# intent: <fidelity | tuned>   (fidelity = correction only, preference layer zero — §1 rule)
 # fs: <48000> | basis=<user-stated | status-bar | assumed>   (the Fs every §4 number was computed at)
 # headroom: LF clean-boost ≈ +<x>dB, broadband ≈ ±<y>dB | basis=<driver/enclosure/THD data | class-inferred>  (sets §7 boost ceilings)
 # preference_envelope: <class spread, e.g. bass +2..+8 dB, treble ±3 dB> | tier=<gentle|moderate|strong ⇒ ±<z> dB> | basis=<Harman OE preference data | audibility-anchored | ...>  (sets the Q18 taste bound)
@@ -245,6 +249,7 @@ Delay: 0 ms
 - [ ] Layers in order; preference clamped to its Q18 tier of the recorded preference envelope; medical last as caps.
 - [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
 - [ ] Every taste move meets the ~2 dB audibility floor (§3) — sub-audible moves omitted, never scaled down.
+- [ ] Fidelity intent (if declared at any question) honoured: preference layer zero everywhere except reported-discomfort cuts, taste questions skipped, `# intent: fidelity` recorded.
 - [ ] Filters on real Fc, width-matched Q; no smoothing; ≤32/section; notch = NO; supported types only.
 - [ ] Consolidation only per §5; `components=` recorded.
 - [ ] Correction only in filters; not duplicated in filter+GEQ (preference-on-top only in tone-layer mode); exactly one GraphicEQ line per EQ section.

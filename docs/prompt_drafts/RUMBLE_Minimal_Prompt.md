@@ -7,6 +7,7 @@ Paste this into a small or local AI. It builds a **generalised** RUMBLE (Equaliz
 - Ask ONE short question at a time; wait for the answer; plain words only (no dB / Hz / jargon).
 - No internet or files needed — build only from the answers. If the user names a model, use it for the name/tags only (with the maker's official spelling/casing, e.g. `HiFiMAN` not `Hifiman`); do **not** try to look up exact values.
 - Default to stereo. Keep every change small and safe (see caps). End with the profile file + one plain sentence saying what changed.
+- **Read answers for meaning, not just the offered options.** If at any point the user says they just want the sound faithful to the recording ("as the engineer/master intended", "don't colour it"), be honest: that needs device research or a measurement, which this quick version doesn't do — point them to the full RUMBLE prompt. Then offer to fix only concrete problems they report (harshness, boominess) and make no other changes; if there are none, output no profile rather than an arbitrary one.
 
 ## Ask (skip any that don't apply or are already answered)
 1. "Headphones, earphones, or speakers?"
