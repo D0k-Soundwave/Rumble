@@ -15,7 +15,7 @@ Paste this into a small or local AI. It builds a RUMBLE (Equalizer APO) profile 
 Keep it short — the default is the good, balanced sound, so you only need what they'd actually change.
 1. "Headphones, earphones, or speakers?"
 2. "What make and model? (Fine to skip.)" *(headphones/earphones + internet access → AutoEq lookup; otherwise name/tags only)*
-3. "Is there anything about how it sounds you'd change — too boomy or too thin, anything sharp or harsh, voices hard to follow, or dull and muffled? (If it's basically fine, I'll just clean up your gear's known weak spots.)"
+3. "What do you want from it — to hear every fine detail, an easy relaxing listen, or a big spacious feel? And is there anything you'd fix — too boomy or thin, harsh, or dull? (Not sure? I'll just make it accurate and clean.)"
 4. *(optional)* "Does the sound sit centered between left and right, or pull to one side? (Skip if centered.)"
 5. "Do you usually listen quietly (background level), or at normal/loud volume?"
 6. *(optional)* "Any hearing notes — ringing in the ears, one ear clearly worse than the other, trouble following speech in noise, hearing loss, or sound tiring you out?"
@@ -23,15 +23,19 @@ Keep it short — the default is the good, balanced sound, so you only need what
 ## Turn answers into filters (fixed frequencies, full-strength moves)
 **If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published.** No complaint and no data → the AutoEq correction alone, or (offline) nothing to change — say so rather than invent a profile.
 **Every taste move is a FULL, clearly-audible step — about 4 dB, up to 6 for an emphatic complaint ("way too boomy"); never more than 6, never a timid 1–2.** There is NO "how strong?" question: a change too small to obviously hear would be done by hand in RUMBLE, not generated here.
-Add a filter ONLY for a change the user actually asked for (`step` = that full ~4 dB move):
+Add a filter ONLY for what the user actually asked for (`step` = that full ~4 dB move):
+*What they want:*
+- **hear every detail / everything** → `PK 2800 Hz +step Q 1.0` and `HSC 10000 Hz +step Q 0.7` (presence + air; keep bass modest so detail isn't masked)
+- **easy / relaxing / non-fatiguing** → `LSC 90 Hz +step Q 0.7` and `HSC 10000 Hz -step Q 0.7` (gentle warmth, eased treble)
+- **spacious / wider / out-of-head** → point them to RUMBLE's Crossfeed (Settings) — that's the real spatial tool; EQ alone can't widen. Optionally a small `HSC 10000 Hz +2 Q 0.7` for air.
+- **accurate / not sure** → no taste filters (the correction alone is the profile).
+*What they'd fix:*
 - **too boomy / muddy / too much bass** → `LSC 90 Hz -step Q 0.7`
 - **too thin / tinny / no weight** → `LSC 90 Hz +step Q 0.7`
 - **sharp / harsh 's' / cymbals** → `PK 7000 Hz -step Q 2.5`
 - **shouty / honky middle** → `PK 3200 Hz -step Q 1.5`
 - **voices buried / hard to follow** → `PK 2800 Hz +step Q 1.0`
 - **dull / muffled / no air** → `HSC 10000 Hz +step Q 0.7`
-- *(only if they volunteer a character)* **warmer** → `LSC 90 Hz +step` and `HSC 10000 Hz -step`; **brighter** → `HSC 10000 Hz +step`
-- **"it's fine" / nothing named** → no taste filters at all (the correction alone is the profile).
 - **Speakers only:** also add a gentle tilt — `LSC 90 Hz +2 Q 0.7` and `HSC 8000 Hz -2 Q 0.7` — and say the profile is generalised (the room matters more than the speaker; suggest measuring for accuracy). If they use a separate subwoofer, point them to RUMBLE's bass-management tool (crossover, sub level, delays) rather than EQ-ing it here.
 
 **Combining (do this before writing the file):**

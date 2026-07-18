@@ -40,8 +40,8 @@ Ordering is general→specific and correction-basis→taste, so each answer maxi
 14. "Mostly music, gaming, films, critical/mixing, or casual?" `[mixing⇒preference=0; target flat (HP/IEM) or in-room tilt (speakers); gaming/films⇒small dialogue lift]`
 15. *(music)* "What genres mostly?" `[tags + gentle framing only; never overrides correction]`
 
-**C. The sound you want** (default is the good balanced target — ask only what they'd change)
-16. "Is there anything about how it sounds now you'd change? For example — too boomy or too thin; anything sharp or harsh on the ears; voices hard to follow; or dull and muffled. If it's basically fine, I'll just fix your gear's known weak spots and leave the balance alone." `[The ONE taste question — no character menu, no intensity dial (normal listeners can't judge abstract tone options or "how strong", and shouldn't have to trade one range against another). Default (no complaint / "it's fine" / "don't know" / "just make it accurate") ⇒ fidelity (§1): preference=0, the researched target only, so they get the full balanced sound — "all of it". Map ONLY what they volunteer, each a FULL, clearly-audible move (§3), bounded by the §2 preference envelope + §7 headroom: too boomy/muddy⇒ease bass; too thin/tinny⇒add bass; sharp/harsh/sibilant/"hurts"⇒tame that region (flaw fix, allowed even under fidelity); voices buried/hard to follow⇒presence lift ~2–4 kHz; dull/muffled/veiled⇒treble lift; boxy/honky/shouty⇒ease mids. A volunteered character ("I like it warm and punchy") is honoured via the §1 read-for-intent rule.]`
+**C. What you want from it** (ask their goal, in real terms — the AI translates it to tuning)
+16. "What do you want this to do for you? For instance — reveal every fine detail (breaths, the room, background sounds), an easy relaxing listen you won't tire of, or a big, spacious, out-of-your-head feel. And is there anything about how it sounds now you'd fix — boomy, harsh, thin, or dull? (Not sure? I'll just make it accurate and clean.)" `[The ONE taste question — ask what they WANT (a real goal they can picture and desire), NEVER an abstract character (warm/bright) or "how strong" (both meaningless to a normal listener, and neither tells you what they're actually after). Research what a stated goal means acoustically (§3) and translate it. Default (not sure / "accurate" / nothing named) ⇒ fidelity (§1): the researched target only — the full balanced sound, "all of it". Goals AND any volunteered complaint both map in §3, each a FULL, clearly-audible move bounded by the §2 preference envelope + §7 headroom — no intensity dial. A spatial want ("wider/spacious/out-of-head", or its opposite "stuck in my head") ⇒ recommend RUMBLE's Crossfeed in the summary (the real spatial tool on headphones; EQ alone can't truly widen) — a render-layer hand-off, never profile content.]`
 
 **D. Hearing** (optional; medical caps, applied last, always win)
 17. "Any hearing notes — ringing (tinnitus), speech-in-noise trouble, hearing loss, fatigue? Fine to skip." `[medical caps: tinnitus⇒≤0 in band; loss⇒floor +2–4; speech-in-noise⇒+1–2 @2–4 kHz; fatigue⇒cap in band. If the user reports a difference BETWEEN their ears (one worse; the image pulled by hearing, not gear) ⇒ recommend RUMBLE's Ear Calibration in the summary: it measures each ear and applies a precise, measured per-ear correction as a render layer — far better than a static guess, and the right tool for a hearing-side imbalance. skip ⇒ no caps]`
@@ -49,12 +49,11 @@ Ordering is general→specific and correction-basis→taste, so each answer maxi
 **E. Listening level**
 18. "Listen quiet, normal, or loud?" `[very loud⇒cautious bass boost; quiet/background⇒recommend enabling RUMBLE's Loudness feature (Settings) in the summary — never emit a LoudnessCorrection: line, §8]`
 
-**F. Optional extras** (default off)
+**F. Optional extra** (default off)
 19. "Want a simple tone control you can nudge yourself afterwards?" `[tone-control option: yes⇒GEQ tone-layer §6 (correction in filters, preference in GraphicEQ contour); no⇒preference in filters]`
-20. *(headphones/IEM, skippable)* "On headphones, does hard-panned stereo ever feel stuck inside your head or unnaturally split? (Skip if it sounds fine.)" `[crossfeed hand-off: yes ⇒ recommend RUMBLE's Crossfeed feature (Settings) in the summary — cited headphone crossfeed circuits, a render layer, never profile content; do not build crossfeed into this file. skip/fine ⇒ nothing]`
 
 **G. Confirm**
-21. Recap (gear + use + anything to change + hearing) → "Right?" Fix the named item, or generate.
+20. Recap (gear + use + what they want + hearing) → "Right?" Fix the named item, or generate.
 
 ## 2. RESEARCH THE GEAR (you, not the user)
 Establish the model's known FR deviations. Priority:
@@ -110,7 +109,17 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - Shelves are filters (LSC/HSC), never GEQ (the §6 GEQ tone-layer is a freeform contour, not a shelf — the one allowed overlap).
 - Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. **Ceiling: PK Q ≈ 8** — above that a peaking filter rings and reads as unstable/audibly metallic; if research or an import wants narrower, widen it or split it into two, and never invent a high-Q notch to chase a single measurement spike. List ascending by Fc, `Filter 1…N`, no gaps.
 
-**Taste mapping — complaint → move** (only the complaints the user actually volunteered at the §1 taste question; nothing here fires by default):
+**Taste mapping — what they want / what they'd fix → move** (only what the user actually volunteered at the §1 taste question; nothing fires by default). **Research the consensus for a stated goal** — look up what tuning reviewers/measurements associate with it ("detail retrieval", "wide stage", "relaxed", …) and translate that; the rows are the sensible default, not a hard script.
+
+*Goals (what they want):*
+| Want | Move |
+|---|---|
+| hear every detail / everything / "the fart in the background" / analytical | lift presence ~2–4 kHz + a little upper-treble air; keep bass controlled so it doesn't mask low-level detail |
+| relaxing / easy / non-fatiguing / "get lost in it" | gentle warmth (low shelf up a touch) + ease the treble; smooth broad moves |
+| spacious / wider / out-of-head / immersive / live feel | recommend RUMBLE's **Crossfeed** (the real spatial tool on headphones); EQ can add only a little air — say plainly EQ alone can't truly widen |
+| accurate / true to the recording / not sure | the target as-is (correction only, §1 fidelity) |
+
+*Complaints (what they'd fix):*
 | Complaint (plain words) | Move |
 |---|---|
 | too boomy / muddy / too much bass | ease bass — low shelf down (LSC ~90–110 Hz) |
@@ -265,7 +274,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 - Canonical header = the `# RUMBLE Profile:`/`# Description:`/`# Tags:`/`# Created:`/`# Modified:`/`# Created by RUMBLE` lines in that order, with `# Fit Sample Rate: <Fs>` inserted just before the `# Created by RUMBLE` line ONLY when a rate-robust residual is used (§3). Don't emit `# Readonly:`/`# Builtin:` (app-managed). Dates ISO. The v2 block carries chain/source_mode/target_curve/status/intent/fs/headroom/preference_envelope/preamp_basis (no app header field for these) and is the round-trip source of truth.
 - **Convolution (only if the user has an IR file):** `Convolution: <path>` as a global line BEFORE the first `Channel:` line — whole-signal room correction applies to every channel, and this is where RUMBLE stores it (place it after `Channel:` and the app relocates it on re-save). Use the path the user gives; if only a filename is known, use that and tell them to place the `.wav` where RUMBLE/APO can find it. Fold it into headroom per §7 (provisional preamp + clip check). Provenance `convolution`.
 - **Channel balance (only if a pull was reported):** a per-channel `Preamp:` attenuating the louder side, in a bare per-channel section after the main body (§6). Never boost the quieter side. Omit entirely if centered.
-- **Surface these hand-offs in the plain-language summary when flagged (they are app features, never profile content):** RUMBLE's Ear Calibration for a between-ears hearing difference; Crossfeed for in-head/hard-panned headphone fatigue; the bass-management tool for a separate subwoofer; the Loudness feature for quiet/background listening.
+- **Surface these hand-offs in the plain-language summary when flagged (they are app features, never profile content):** RUMBLE's Ear Calibration for a between-ears hearing difference; Crossfeed for a spatial want (wider/out-of-head) or in-head/hard-panned fatigue; the bass-management tool for a separate subwoofer; the Loudness feature for quiet/background listening.
 - `Channel:` default stereo `L R`; mono `all` only if explicit. **Surround channel names (APO):** stereo `L R`; 5.1 `L R C LFE RL RR` (some devices report `SL SR` instead of `RL RR` — match what RUMBLE's channel preset/status bar shows); 7.1 `L R C LFE RL RR SL SR`. Surround rules: apply the correction to the main channels (one `Channel: L R C RL RR SL SR` style section, or `all` when genuinely uniform); **never apply full-range EQ or boosts to `LFE`** (it is band-limited by content and drivers — a full-range boost there only adds distortion); bass redirection/crossovers/sub feeds belong to RUMBLE's bass-management tool, not to this profile. `Device:` optional, normally omitted (never auto-`all`).
 - Filter line: `Filter n: ON|OFF <type> Fc <hz> Hz Gain <dB> dB Q <q>` (or `BW Oct <v>`, convertible via §4.6). **32 per section is the ceiling, not a target** — emit exactly as many as the real deviations plus justified taste moves require, however few or many.
 - Types accepted: PK, LSC/HSC, LS/HS, LS/HS 6dB|12dB, LP/HP/LPQ/HPQ/BP, NO, AP, PEQ, Modal, IIR. RUMBLE normally emits PK/LSC/HSC, occasionally NO/LP/HP.
@@ -300,7 +309,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 - [ ] Delay blocks (if any) are bare per-channel sections after the main section; no filters/GEQ inside them.
 - [ ] Channel balance (if a pull was reported): per-channel `Preamp:` attenuates the louder side only, in a per-channel section after the main body; centered/skipped ⇒ none.
 - [ ] Convolution (if the user has an IR): `Convolution:` line emitted after the first Channel, correction not double-applied over what the IR fixes, headroom treated provisionally (+~1 dB margin, clip check).
-- [ ] Hand-offs surfaced in the summary where flagged: Ear Calibration (between-ears hearing difference), Crossfeed (in-head headphone fatigue), bass management (subwoofer), Loudness (quiet listening).
+- [ ] Hand-offs surfaced in the summary where flagged: Ear Calibration (between-ears hearing difference), Crossfeed (spatial want or in-head headphone fatigue), bass management (subwoofer), Loudness (quiet listening).
 - [ ] No `LoudnessCorrection:` line anywhere (quiet listeners pointed at RUMBLE's Loudness feature in the summary instead).
 - [ ] UTF-8; body numbers ASCII `-` and digits (no Unicode `−`).
 - [ ] Speakers w/o in-room measurement ⇒ status provisional.
@@ -310,7 +319,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 - [ ] User given a plain check (clip/A-B/re-measure, §13).
 
 ## 10. FLOW (skeleton)
-1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, subwoofer?, source, DAC/amp+mode, measurement?, IR file?, sample rate?, channels, balance?, use, genres, then the ONE taste question (anything you'd change — else the target as-is), then medical, volume, tone-control?, headphone spatial-fatigue?. Every added item is skippable to a value-neutral default; harvest (§0) skips any already implied.
+1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, subwoofer?, source, DAC/amp+mode, measurement?, IR file?, sample rate?, channels, balance?, use, genres, then the ONE taste question (what they want from it + anything they'd fix — else the target as-is), then medical, volume, tone-control?. Every added item is skippable to a value-neutral default; harvest (§0) skips any already implied.
 2. Research the same DBs RUMBLE uses (§2): HP/IEM → AutoEq; speakers → Spinorama Listening Window. Average several measurements, don't cherry-pick. → deviations w/ provenance + the headroom and preference envelopes; flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class (the good default sound); taste only where the user named a change.
 4. correction (inverse deviations, or fit measurement §11) + any volunteered taste (full-strength, envelope-bounded) = total.
