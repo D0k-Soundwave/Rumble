@@ -67,6 +67,7 @@ Establish the model's known FR deviations. Priority:
 2. **Published data online** ⇒ map known peaks/dips to filters; `measured` if a real curve exists, else `inferred`. Use the SAME databases RUMBLE imports from, the same way — then the values reconcile with what the app itself would produce for this device.
    - **Headphones/IEMs — AutoEq is the first stop.** `autoeq.app`; `jaakkopasanen/AutoEq` GitHub = correction DB from oratory1990, Crinacle, Rtings, Innerfidelity (each `<Device> ParametricEQ.txt` is already APO syntax). AutoEq optimises at 48 kHz, so its realised response is exact at Fs=48000 and very close at 44100 — at 88.2/96 kHz and above re-check any filter with Fc above ~8 kHz against §4 at the actual rate.
      - Look up the exact model+variant. Use its filters as a correction-layer start toward its target, then re-layer: apply chosen target/character, add clamped preference + medical, consolidate, **recompute preamp yourself** (§4.5) — don't keep AutoEq's preamp.
+     - **Re-targeting: add the delta, not the target on top.** AutoEq's filters already bake in AutoEq's own target (usually Harman). If the user's chosen target differs (e.g. Diffuse-field, §3), add the `(chosen target − AutoEq's baked target)` curve — never the chosen target as if starting from flat, which would double-apply a target.
      - **Several measurements of one model ⇒ average them** on the shared/union grid (§4.4 log-linear interp), weighting a more-trusted source higher — the same quality-weighted average RUMBLE's merge does; never just pick one. Adapt, don't copy. Provenance `measured`, source in `note=`.
    - **Speakers — Spinorama is the first stop** (the same role AutoEq plays for headphones, and the exact source RUMBLE's speaker import uses). `spinorama.org` aggregates anechoic Klippel-NFS measurements (Audio Science Review, Erin's Audio Corner, …). Take the **Listening Window** curve and build the correction per §3 — it is a raw normalised response, NOT a finished correction like AutoEq's, so you subtract it from the tilt/target yourself. Several measurements ⇒ average as above (weight higher-quality ones). Provenance `measured`, still `status=provisional` until the user measures their own room (the room dominates a speaker in-room, §12).
    - Cross-check against reviewer consensus (oratory1990, Squiglink for headphones; the measurement's own review notes for speakers).
@@ -80,7 +81,7 @@ Rules:
 - **Pasted correction file** (AutoEq/oratory1990/Squiglink ParametricEQ.txt): APO syntax — read filters into correction (provenance measured/inferred, source in note); **discard its Preamp, recompute** (§4.5).
 - **Pasted raw measurement** (REW .txt = header + `Freq SPL [Phase]`; or CSV) ⇒ fit per §11, don't read as filters.
 - Speakers: room dominates; without an in-room measurement ⇒ provisional; biggest gains = placement + measuring.
-- Set `provenance=` honestly; never present inferred as measured; never fabricate.
+- **Cite what you actually retrieved; never confabulate a curve.** Use only data you really fetched this session, and name the exact source you read (the device's AutoEq/Spinorama page) in `note=`. If you could NOT fetch data for this precise model+variant, say so plainly and drop to `inferred` from stated preferences — a plausible-looking invented filter set presented as `measured` is the single worst failure mode. Set `provenance=` honestly; never present inferred as measured; never fabricate.
 - Use the manufacturer's official spelling/casing for brand/model names in the name, chain and tags (e.g. `HiFiMAN`, `FiiO`, `Voarmaks` — not `Hifiman`/`Fiio`/`Voarmarks`).
 
 ## 3. BUILD MODEL
@@ -112,7 +113,7 @@ medical caps  = hard min/max on total, imposed LAST, always win
 - One filter per real deviation; width-matched Q. **The count is driven by need, not a target: 32/section is a ceiling, there is no floor.** Never drop a real correction to hit a smaller number, and never pad to reach a larger one — a correction filter is only ever removed by genuine consolidation (§5, redundant overlap), never to shrink the count.
 - `PK` peaks/dips; `LSC`/`HSC` shelves; `LP`/`HP`/`BP`/`NO` as needed. **Notch type = `NO`, never "notch".**
 - Shelves are filters (LSC/HSC), never GEQ (the §6 GEQ tone-layer is a freeform contour, not a shelf — the one allowed overlap).
-- Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. List ascending by Fc, `Filter 1…N`, no gaps.
+- Q guide: narrow resonance 3–6; broad region 0.7–1.2; shelves ~0.7. **Ceiling: PK Q ≈ 8** — above that a peaking filter rings and reads as unstable/audibly metallic; if research or an import wants narrower, widen it or split it into two, and never invent a high-Q notch to chase a single measurement spike. List ascending by Fc, `Filter 1…N`, no gaps.
 
 **Taste mapping (each clamped to its strength tier of the §2 preference envelope):**
 | Factor (Q) | Role | Effect |
@@ -125,6 +126,8 @@ medical caps  = hard min/max on total, imposed LAST, always win
 **Audibility floor (why there is no "effort"/"boldness" scaling factor):** this tool exists to make clearly audible changes — a profile that doesn't obviously sound different would be built by hand in RUMBLE's editor instead, so there is nothing to ask. Every taste move you decide to make renders at full strength: **at least ~2 dB (about twice the ~1 dB JND), up to the strength tier of the §2 preference envelope.** Never scale a justified move down into near-inaudibility; if a move cannot justify at least the floor, omit it entirely and say so in the summary. Restraint is expressed as *fewer moves*, never *smaller-than-audible moves*.
 
 Use-case nudges (taste layer): gaming/films ⇒ clear ~2–4 kHz dialogue lift (+2–3); casual ⇒ fewer moves, each still at full audible strength; mixing ⇒ no taste moves at all.
+
+**Several distinct uses named ⇒ suggest one profile each.** If the use-case answer names genuinely different uses (e.g. music AND competitive gaming, or casual AND critical), a single profile can't be ideal for both — build the one they lead with now, and in the summary offer to make the others as separate profiles (RUMBLE holds many and auto-switches per device). Don't average conflicting uses into one muddy profile.
 
 **Medical caps (last, always win):**
 - Tinnitus ⇒ total ≤0 in band (high ≈≥8 kHz, low ≈≤125 Hz).
@@ -189,6 +192,7 @@ GraphicEQ jobs:
 - **B Tone layer (on request — the tone-control option, §1):** preference layer as a broad draggable contour over the parametric correction. Provenance user-pref.
 - **C Rate-robust residual (§3/§4.7, only when `# Fit Sample Rate:` is stamped):** the leftover of the correction the PK bands don't capture. Provenance mirrors the correction it completes (measured/inferred). This is the ONE sanctioned place correction sits in GraphicEQ.
 Rules: correction normally lives in filters — the residual (C) is the sole exception, and a band and the residual never both cover the same deviation (no double-correction). Preference stays clamped to its §2 envelope tier; medical caps apply to the summed total; preamp from the combined curve (safe either way). **Emit exactly ONE GraphicEQ line per EQ section**: if more than one of A/B/C applies, sum them onto the union of their frequency points into that one line, and write one `# geq:` rationale per layer (each listing its own points and `layer=`) so the split stays auditable. GEQ always present (flat = `20 0; 20000 0`).
+**B and C are opposed — don't emit both.** The residual (C) bakes correction *into* the GraphicEQ line for precision; the tone layer (B) needs that line free for the user to drag. If the user asked for an adjustable tone control, do NOT use the residual — keep the whole correction in bands so the GraphicEQ line is purely the tone contour. Use the residual only when there is no tone layer.
 
 **Speaker delay (from the speaker-distance answer, §1):** delay the NEARER speaker; `delay_ms ≈ 2.9 × (distance difference in m)`, **rounded to one decimal** (the app stores delays at 0.1 ms resolution — ~3.4 cm, far finer than a seating estimate); equal (<0.1 m) ⇒ none. `ms` preferred (`samples` are relative to the device's actual rate). **Placement: the delay blocks go AFTER the main `Channel: L R` section (after its filters and GraphicEQ line), as bare per-channel sections carrying ONLY the Delay line — no filters, no GraphicEQ in a delay-only section** (the one-GEQ-per-section rule applies to EQ sections, not delay blocks). E.g. L 0.5 m closer:
 ```
@@ -280,16 +284,18 @@ Delay: 0 ms                              # only present when a Delay is used abo
 - [ ] Parametric output only — no fixed-band/grid rendering, no other-EQ export.
 - [ ] Target stated; correction = target − (measured | known deviations).
 - [ ] Data source is the one RUMBLE uses (AutoEq for HP/IEM, Spinorama Listening Window for speakers); several measurements averaged (quality-weighted), not cherry-picked; target = RUMBLE's named target for the class (Harman OE 2018 / IE 2019 / Diffuse-field 5128; speakers flat-or-−0.9 tilt); no invented free-field.
+- [ ] Data was actually retrieved and its source cited in `note=`; if it couldn't be fetched, dropped to `inferred` honestly — nothing invented is labelled `measured`.
+- [ ] Re-targeting (if the chosen target differs from AutoEq's) adds the `(chosen − AutoEq target)` delta, not the target on top.
 - [ ] Layers in order; preference clamped to its strength tier of the recorded preference envelope; medical last as caps.
 - [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
 - [ ] Every taste move meets the ~2 dB audibility floor (§3) — sub-audible moves omitted, never scaled down.
 - [ ] Fidelity intent (if declared at any question) honoured: preference layer zero everywhere except reported-discomfort cuts, taste questions skipped, `# intent: fidelity` recorded.
-- [ ] Filters on real Fc, width-matched Q; no smoothing; ≤32/section; notch = NO; supported types only.
+- [ ] Filters on real Fc, width-matched Q; no smoothing; ≤32/section; no PK Q above ~8; notch = NO; supported types only.
 - [ ] Consolidation only per §5; `components=` recorded.
 - [ ] Correction only in filters; not duplicated in filter+GEQ (preference-on-top only in tone-layer mode); exactly one GraphicEQ line per EQ section.
 - [ ] Preamp from combined filters+GEQ at the recorded Fs; correct margin (0.5, or 1.0 on >~6 dB combined boost or 3+ boosts >=4 dB); recomputed last.
 - [ ] `# fs:` recorded with its basis; every §4 number computed at that rate; near-Nyquist filters re-checked when Fs is not 48000.
-- [ ] Rate-robust residual (if used): `# Fit Sample Rate:` stamped; residual = target − realised bands on the grid at that Fs (§4.7); no deviation covered by both a band and the residual; residual kept gentle. Otherwise flat GraphicEQ, no stamp.
+- [ ] Rate-robust residual (if used): `# Fit Sample Rate:` stamped; residual = target − realised bands on the grid at that Fs (§4.7); no deviation covered by both a band and the residual; residual kept gentle; and NOT used together with a tone layer (§6). Otherwise flat GraphicEQ, no stamp.
 - [ ] Headroom envelope researched (§2) and recorded in `# headroom:`; total boost capped to it; deep-null cuts flagged.
 - [ ] Every filter + non-flat GEQ has rationale (layer + provenance).
 - [ ] Canonical header ahead of v2 block; tags valid; channel default stereo L R; locked to chain/mode/pads-port.
@@ -337,5 +343,5 @@ Applies to a user measurement (REW etc.) AND to a fetched Spinorama Listening Wi
 
 ## 13. VERIFY
 **You, pre-emit:** filters ascending no gaps; Preamp present ≤0; no filter beyond ±12 dB unjustified; GEQ present (one per EQ section); every filter/non-flat GEQ has rationale; header complete; `# fs:` recorded; locked.
-**Tell the user (plain):** play a loud bass-heavy track — if distorted, drop Preamp 0.5–1 dB; toggle on/off to check the fixes; speakers — re-measure at the seat and adjust (esp. on a provisional profile).
+**Tell the user (plain):** play a loud bass-heavy track — if distorted, drop Preamp 0.5–1 dB; toggle on/off to check the fixes; speakers — re-measure at the seat and adjust (esp. on a provisional profile). **Then invite iteration:** a generated profile is a strong starting point, not final — ask them to tell you if it comes out too bright, too dark, boomy, or harsh, and nudge the relevant filter(s) rather than rebuilding from scratch.
 **By the way:** RUMBLE has a built-in Blind A/B/X test (header button, or tray menu) for a level-matched, unbiased comparison between two profiles. If the user runs it and can't reliably tell two candidates apart, paste the result summary back into this chat — "couldn't distinguish X from Y" is a signal to simplify, i.e. remove or shrink whichever filters aren't earning their keep.
