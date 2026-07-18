@@ -27,7 +27,7 @@ Add a filter ONLY for what the user actually asked for (`step` = that full ~4 dB
 *What they want:*
 - **hear every detail / everything** → `PK 2800 Hz +step Q 1.0` and `HSC 10000 Hz +step Q 0.7` (presence + air; keep bass modest so detail isn't masked)
 - **easy / relaxing / non-fatiguing** → `LSC 90 Hz +step Q 0.7` and `HSC 10000 Hz -step Q 0.7` (gentle warmth, eased treble)
-- **spacious / wider / out-of-head** → point them to RUMBLE's Crossfeed (Settings) — that's the real spatial tool; EQ alone can't widen. Optionally a small `HSC 10000 Hz +2 Q 0.7` for air.
+- **spacious / wider / out-of-head** → RUMBLE's Crossfeed (Settings) is the real spatial tool (EQ alone can't widen). Pick a preset by how much they want — subtle → **Bauer ~60%**, strong → **Jan Meier ~90%** — name it in the summary AND add a comment line to the file `# crossfeed: preset=<bauer|meier> strength=<n>` (RUMBLE reads it; never hand-build the crossfeed block). Optionally a small `HSC 10000 Hz +2 Q 0.7` for air.
 - **accurate / not sure** → no taste filters (the correction alone is the profile).
 *What they'd fix:*
 - **too boomy / muddy / too much bass** → `LSC 90 Hz -step Q 0.7`
