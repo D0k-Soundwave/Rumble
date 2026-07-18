@@ -10,8 +10,8 @@ from dataclasses import replace as dataclass_replace
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (
-    QComboBox, QDoubleSpinBox, QFrame, QHBoxLayout, QInputDialog,
-    QLabel, QMessageBox, QPushButton, QScrollArea, QStackedWidget,
+    QCheckBox, QComboBox, QDoubleSpinBox, QFrame, QHBoxLayout, QInputDialog,
+    QLabel, QMessageBox, QPushButton, QScrollArea, QSlider, QStackedWidget,
     QStyle, QStyleOptionComboBox, QStylePainter, QVBoxLayout, QWidget,
 )
 
@@ -27,7 +27,8 @@ _LED_LIT_TEXT = "●  ACTIVE"
 
 import numpy as np
 
-from rumble.core import autoeq_merge, eq_math, ir_analysis, preamp_calc, time_alignment
+from rumble.core import autoeq_merge, crossfeed, eq_math, ir_analysis, preamp_calc, time_alignment
+from rumble.core.crossfeed import CrossfeedSpec
 from rumble.core.apo_config import MAX_BANDS, ChannelSection, Filter, ProfileConfig
 from rumble.core.audio.engine import ToneEngine
 from rumble.core.geq_peq_convert import fit_peq
@@ -235,6 +236,9 @@ class EditorPanel(QWidget):
         # a fake engine for _on_measure_delay_clicked without real hardware.
         self._tone_engine_factory = tone_engine_factory or ToneEngine
         self._meta: ProfileMeta | None = None
+        # This profile's own crossfeed (per-profile). None ⇒ off. Edited by the
+        # crossfeed row and persisted on save; not part of the undo snapshot.
+        self._crossfeed_spec: "CrossfeedSpec | None" = None
         self._loading = False
         # APO `Device:` patterns whose endpoint is a capture (microphone) flow
         # — they have no WASAPI loopback tap for the live spectrum to read.
@@ -289,6 +293,7 @@ class EditorPanel(QWidget):
 
         root.addWidget(self._build_header_bar())
         root.addWidget(self._build_controls_row())
+        root.addWidget(self._build_crossfeed_row())
 
         # Flat divided tab row — plain checkable buttons over a QStackedWidget
         # instead of a QTabWidget, whose native selected tab paints upward over
@@ -680,6 +685,108 @@ class EditorPanel(QWidget):
                     Qt.ItemDataRole.ToolTipRole)
 
         self.device_combo.setCurrentIndex(index)
+
+    def _build_crossfeed_row(self) -> QWidget:
+        """A compact per-profile crossfeed control: enable + which cited
+        circuit + strength. Crossfeed is a property of THIS profile (it
+        travels with the file and switches when the profile does), so it lives
+        here in the editor rather than in global Settings."""
+        row = QFrame()
+        row.setObjectName("crossfeedRow")
+        lay = QHBoxLayout(row)
+        lay.setContentsMargins(dp(16, 8), dp(2, 1), dp(16, 8), dp(2, 1))
+        lay.setSpacing(dp(8, 4))
+
+        self.chk_crossfeed = QCheckBox("Crossfeed")
+        describe(self.chk_crossfeed, "Crossfeed (this profile)",
+                 "Mix a low-passed, attenuated, delayed copy of each channel "
+                 "into the other so hard-panned headphone content sounds more "
+                 "natural and out-of-head. Saved with this profile; only works "
+                 "on a plain stereo layout.")
+        self.chk_crossfeed.toggled.connect(self._on_crossfeed_changed)
+        lay.addWidget(self.chk_crossfeed)
+
+        self.combo_crossfeed = QComboBox()
+        for key, preset in crossfeed.PRESETS.items():
+            self.combo_crossfeed.addItem(preset.label, key)
+        describe(self.combo_crossfeed, "Crossfeed circuit",
+                 "Which cited crossfeed to model: Chu Moy, Jan Meier, "
+                 "Linkwitz-style (with an interaural delay), Bauer (bs2b's "
+                 "default), or an unfiltered Direct Blend.")
+        self.combo_crossfeed.currentIndexChanged.connect(self._on_crossfeed_changed)
+        lay.addWidget(self.combo_crossfeed)
+
+        self.lbl_crossfeed_strength = QLabel("Strength")
+        lay.addWidget(self.lbl_crossfeed_strength)
+        self.slider_crossfeed = QSlider(Qt.Orientation.Horizontal)
+        self.slider_crossfeed.setRange(0, 100)
+        self.slider_crossfeed.setValue(100)
+        self.slider_crossfeed.setFixedWidth(dp(120, 80))
+        describe(self.slider_crossfeed, "Crossfeed strength",
+                 "How far toward the circuit's full published effect, from 0% "
+                 "(none) to 100%.")
+        self.slider_crossfeed.valueChanged.connect(self._on_crossfeed_changed)
+        lay.addWidget(self.slider_crossfeed)
+        self.lbl_crossfeed_value = QLabel("100%")
+        self.lbl_crossfeed_value.setFixedWidth(dp(40, 32))
+        lay.addWidget(self.lbl_crossfeed_value)
+
+        self.lbl_crossfeed_nonstereo = QLabel("(stereo profiles only)")
+        self.lbl_crossfeed_nonstereo.setProperty("class", "muted")
+        lay.addWidget(self.lbl_crossfeed_nonstereo)
+
+        lay.addStretch(1)
+        self._crossfeed_row = row
+        return row
+
+    def _populate_crossfeed_row(self, config: ProfileConfig) -> None:
+        """Reflect self._crossfeed_spec + the layout's stereo-ness into the
+        crossfeed row. Runs under _loading so it fires no change handlers."""
+        spec = self._crossfeed_spec
+        stereo = crossfeed.can_crossfeed(config.channel_sections)
+        self.chk_crossfeed.setChecked(spec is not None)
+        # A custom spec (rare, from a hand-edited file) has no combo entry;
+        # fall back to showing the default preset but preserve it on save via
+        # _crossfeed_spec unless the user changes the controls.
+        key = spec.preset if (spec is not None and spec.preset in crossfeed.PRESETS) else crossfeed.DEFAULT_PRESET
+        idx = self.combo_crossfeed.findData(key)
+        self.combo_crossfeed.setCurrentIndex(idx if idx >= 0 else 0)
+        strength = int(round(spec.strength)) if spec is not None else 100
+        self.slider_crossfeed.setValue(strength)
+        self.lbl_crossfeed_value.setText(f"{strength}%")
+        # Soft-disable on a non-stereo layout: the block would be skipped at
+        # render anyway, so make that visible rather than silently inert.
+        for w in (self.chk_crossfeed, self.combo_crossfeed, self.slider_crossfeed,
+                  self.lbl_crossfeed_strength, self.lbl_crossfeed_value):
+            w.setEnabled(stereo)
+        self.lbl_crossfeed_nonstereo.setVisible(not stereo)
+
+    def _on_crossfeed_changed(self, *_args) -> None:
+        """Rebuild self._crossfeed_spec from the row and mark the profile
+        dirty (a saved change). No-op while loading."""
+        if self._loading:
+            return
+        self.lbl_crossfeed_value.setText(f"{self.slider_crossfeed.value()}%")
+        if not self.chk_crossfeed.isChecked():
+            self._crossfeed_spec = None
+        else:
+            key = str(self.combo_crossfeed.currentData() or crossfeed.DEFAULT_PRESET)
+            # Preserve a loaded custom spec's own params if the user only
+            # toggled/adjusted strength while it happened to be shown.
+            base = self._crossfeed_spec
+            self._crossfeed_spec = CrossfeedSpec(
+                preset=key,
+                strength=float(self.slider_crossfeed.value()),
+                custom_gain_db=base.custom_gain_db if base else -6.0,
+                custom_freq_hz=base.custom_freq_hz if base else 700.0,
+                custom_delay_us=base.custom_delay_us if base else 300.0,
+            )
+        self.dirty.emit()
+
+    def crossfeed_spec(self) -> "CrossfeedSpec | None":
+        """This profile's edited crossfeed (None ⇒ off) — read by the main
+        window for live preview and save."""
+        return self._crossfeed_spec
 
     def _on_preamp_changed(self, _value: float) -> None:
         if not self.btn_auto_preamp.isChecked():
@@ -1987,6 +2094,9 @@ class EditorPanel(QWidget):
 
             self._load_config_into_ui(config)
 
+            self._crossfeed_spec = meta.crossfeed
+            self._populate_crossfeed_row(config)
+
             self._refresh_ir_result()
             self._update_headroom_label()
             self._refresh_graph_and_raw()
@@ -2010,6 +2120,9 @@ class EditorPanel(QWidget):
         self.btn_clear_all.setEnabled(not is_readonly)
         self.name_edit.setReadOnly(is_readonly)
         self.desc_edit.setReadOnly(is_readonly)
+        if is_readonly:
+            for w in (self.chk_crossfeed, self.combo_crossfeed, self.slider_crossfeed):
+                w.setEnabled(False)
 
     # ── undo / redo ──────────────────────────────────────────────────
 

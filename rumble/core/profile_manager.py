@@ -1203,6 +1203,31 @@ class ProfileManager:
         return apo_config.parse_config(
             text, sample_rate=self.effective_sample_rate())
 
+    def set_profile_crossfeed(self, profile_id: str,
+                              spec: "crossfeed.CrossfeedSpec | None",
+                              *, write: bool = True) -> bool:
+        """Set a profile's own crossfeed (per-profile). With write=True it
+        persists the file and re-renders if the profile is active -- used by
+        the tray quick-toggle. With write=False it only updates the in-memory
+        meta, for callers (the editor save) that write the file themselves
+        immediately after."""
+        meta = self.get_profile(profile_id)
+        if meta is None or meta.protected:
+            return False
+        meta.crossfeed = spec
+        if not write:
+            return True
+        config = self.load_profile_config(profile_id)
+        if config is None:
+            return False
+        meta.modified = _now_iso()
+        if not self._write_profile_file(meta, config):
+            return False
+        self.save()
+        if meta.active:
+            self._write_active_pointer(meta)
+        return True
+
     def save_profile_config(self, profile_id: str, config: ProfileConfig) -> bool:
         meta = self.get_profile(profile_id)
         if meta is None or meta.protected:

@@ -689,7 +689,7 @@ class MainWindow(QMainWindow):
         # for_preview applies audition-only state (a soloed band) that must
         # be audible but never saved.
         config = self.editor_panel.build_config(for_preview=True)
-        self.manager.preview_config(config)
+        self.manager.preview_config(config, self.editor_panel.crossfeed_spec())
         self._update_status_bar()
 
     # ── profile actions ──────────────────────────────────────────────
@@ -785,6 +785,10 @@ class MainWindow(QMainWindow):
         self._preview_timer.stop()
         self.manager.rename_profile(profile_id, name)
         self.manager.update_profile_meta(profile_id, description=description)
+        # Per-profile crossfeed (edited in the editor) rides along on the same
+        # save: set it on the meta first (write=False), then save_profile_config
+        # writes the file -- header (incl. Crossfeed) + body -- and re-renders.
+        self.manager.set_profile_crossfeed(profile_id, self.editor_panel.crossfeed_spec(), write=False)
         self.manager.save_profile_config(profile_id, config)
         self._dirty = False
         self._preview_diverged = False

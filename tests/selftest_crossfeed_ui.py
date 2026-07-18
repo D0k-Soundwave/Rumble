@@ -43,6 +43,9 @@ from rumble.core.profile_manager import (
     ProfileManager, make_flat_config,
 )
 from rumble.ui.main_window import MainWindow
+from rumble.ui.editor_panel import EditorPanel
+from rumble.ui.theme.tokens import THEMES, DEFAULT_THEME_NAME
+from rumble.core import apo_config
 from rumble.ui.settings_dialog import SettingsDialog
 from rumble.ui.theme.theme_engine import ThemeEngine
 from rumble.ui.theme.tokens import DEFAULT_THEME_NAME, THEMES, get_theme
@@ -388,7 +391,46 @@ def insert_into_profile_noop_when_nothing_to_insert() -> None:
     expect(w._loaded_profile_id == loaded_before, "a no-op insert must not change the loaded profile")
 
 
+def editor_crossfeed_control_loads_edits_and_exposes_spec() -> None:
+    """The per-profile crossfeed control in the editor: reflects the loaded
+    profile's crossfeed, marks dirty and rebuilds the spec on edit, and
+    soft-disables on a non-stereo layout."""
+    stereo = apo_config.parse_config(
+        "Preamp: -3 dB\nChannel: L R\nFilter 1: ON PK Fc 1000 Hz Gain -2 dB Q 1\n")
+    ed = EditorPanel(theme=THEMES[DEFAULT_THEME_NAME])
+
+    with tempfile.TemporaryDirectory() as tmp:
+        mgr = ProfileManager(data_dir=Path(tmp) / "d", config_path=Path(tmp) / "c")
+        mgr.ensure_first_run()
+        meta = mgr.create_profile("P", config=stereo)
+    ed.load_profile(meta, stereo, is_active=True, is_bypassed=False)
+    expect(ed.chk_crossfeed.isChecked() is False, "no crossfeed -> checkbox off")
+    expect(ed.crossfeed_spec() is None, "no crossfeed -> spec None")
+    expect(ed.chk_crossfeed.isEnabled(), "stereo layout enables the control")
+
+    dirty = []
+    ed.dirty.connect(lambda: dirty.append(1))
+    ed.chk_crossfeed.setChecked(True)
+    ed.combo_crossfeed.setCurrentIndex(ed.combo_crossfeed.findData("meier"))
+    ed.slider_crossfeed.setValue(80)
+    expect(len(dirty) > 0, "editing crossfeed marks the profile dirty")
+    spec = ed.crossfeed_spec()
+    expect(spec is not None and spec.preset == "meier" and spec.strength == 80,
+           f"spec reflects the edit, got {spec!r}")
+
+    meta.crossfeed = crossfeed.CrossfeedSpec(preset="bauer", strength=60)
+    ed.load_profile(meta, stereo, is_active=True, is_bypassed=False)
+    expect(ed.chk_crossfeed.isChecked() and ed.combo_crossfeed.currentData() == "bauer"
+           and ed.slider_crossfeed.value() == 60, "loading a crossfeed profile reflects it")
+
+    mono = apo_config.parse_config("Channel: C\nFilter 1: ON PK Fc 100 Hz Gain 1 dB Q 1\n")
+    ed.load_profile(meta, mono, is_active=True, is_bypassed=False)
+    expect(ed.chk_crossfeed.isEnabled() is False, "non-stereo layout soft-disables the control")
+
+
 def main() -> int:
+    step("the editor's per-profile crossfeed control loads, edits and exposes a spec",
+         editor_crossfeed_control_loads_edits_and_exposes_spec)
     step("the crossfeed section prefills from DEFAULT_SETTINGS", prefill_matches_defaults)
     step("Save round-trips enable/preset/strength into the emitted settings dict",
          save_round_trips_all_three_keys)
