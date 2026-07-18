@@ -1,0 +1,55 @@
+{
+  "name": "Screamer",
+  "accent_name": "Signal Red",
+
+  "bg_deep": "#454545",
+  "bg_sunken": "#525252",
+  "bg_base": "#5F5F5F",
+  "bg_surface": "#6B6B6B",
+  "bg_raised": "#767676",
+
+  "border_subtle": "#7D7D7D",
+  "border_default": "#C40000",
+  "border_strong": "#E00000",
+
+  "accent": "#E00000",
+  "accent_hover": "#FF1A1A",
+  "accent_active": "#B00000",
+  "accent_muted": "#E0000026",
+  "accent_glow": "#E0000055",
+
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#E6E6E6",
+  "text_muted": "#CCCCCC",
+  "text_on_accent": "#FFFFFF",
+
+  "success": "#66CC00",
+  "warning": "#FF9F1A",
+  "error": "#FF3333",
+  "info": "#4DA6FF",
+
+  "graph_bg": "#333333",
+  "graph_grid": "#474747",
+  "graph_zero": "#4DA6FF",
+  "graph_curve": "#E00000",
+  "graph_band": "#E0000026",
+  "graph_band_sel": "#4DA6FF",
+  "graph_handle": "#E00000",
+  "graph_text": "#CCCCCC",
+  "graph_points": "#FFA000",
+  "graph_geq": "#4DA6FF",
+
+  "scrollbar_track": "#4F4F4F",
+  "scrollbar_thumb": "#C40000",
+  "scrollbar_thumb_hover": "#E00000",
+
+  "font_ui": "\"Inter\", \"Segoe UI\", Arial, sans-serif",
+  "font_display": "\"Space Grotesk\", \"Inter\", \"Segoe UI\", sans-serif",
+  "font_mono": "\"IBM Plex Mono\", \"Cascadia Code\", \"Consolas\", monospace",
+
+  "radius_scale": 1.0,
+  "sheen": 0.8,
+  "bevel": 0.9,
+  "glow": 0.4,
+  "glass_alpha": 0.92
+}

@@ -1,0 +1,55 @@
+{
+  "name": "Soundwave",
+  "accent_name": "Decepticon Purple",
+
+  "bg_deep": "#00091A",
+  "bg_sunken": "#011026",
+  "bg_base": "#011833",
+  "bg_surface": "#052548",
+  "bg_raised": "#0A335E",
+
+  "border_subtle": "#123A5E",
+  "border_default": "#1E4E7A",
+  "border_strong": "#A64DBF",
+
+  "accent": "#A64DBF",
+  "accent_hover": "#BE6FD1",
+  "accent_active": "#7A2E9E",
+  "accent_muted": "#A64DBF26",
+  "accent_glow": "#A64DBF55",
+
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#CCD3E0",
+  "text_muted": "#8A97AB",
+  "text_on_accent": "#FFFFFF",
+
+  "success": "#009933",
+  "warning": "#E6A020",
+  "error": "#FF3333",
+  "info": "#3A6EA5",
+
+  "graph_bg": "#010F26",
+  "graph_grid": "#052548",
+  "graph_zero": "#1E4E7A",
+  "graph_curve": "#A64DBF",
+  "graph_band": "#A64DBF26",
+  "graph_band_sel": "#009933",
+  "graph_handle": "#A64DBF",
+  "graph_text": "#CCD3E0",
+  "graph_points": "#3A6EA5",
+  "graph_geq": "#009933",
+
+  "scrollbar_track": "#011026",
+  "scrollbar_thumb": "#1E4E7A",
+  "scrollbar_thumb_hover": "#7A3FA0",
+
+  "font_ui": "\"Inter\", \"Segoe UI\", Arial, sans-serif",
+  "font_display": "\"Space Grotesk\", \"Inter\", \"Segoe UI\", sans-serif",
+  "font_mono": "\"IBM Plex Mono\", \"Cascadia Code\", \"Consolas\", monospace",
+
+  "radius_scale": 0.9,
+  "sheen": 1.2,
+  "bevel": 1.1,
+  "glow": 0.8,
+  "glass_alpha": 0.87
+}

@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rumble"
+version = "1.0.0"
+description = "RUMBLE — a Windows desktop EQ profile manager for Equalizer APO."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "D0k" }]
+keywords = ["equalizer-apo", "eq", "audio", "parametric-eq", "autoeq"]
+classifiers = [
+    "Environment :: Win32 (MS Windows)",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia :: Sound/Audio",
+]
+dependencies = [
+    "PySide6",
+    "pyqtgraph",
+    "numpy",
+    "pywin32; sys_platform == 'win32'",
+]
+
+# GUI entry point — installs a windowed `rumble` launcher (no console window).
+[project.gui-scripts]
+rumble = "rumble.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["rumble*"]
+
+# Non-code resources shipped inside the package (also collected by the
+# PyInstaller spec for the frozen build).
+[tool.setuptools.package-data]
+rumble = [
+    "rumble.ico",
+    "assets/fonts/*.ttf",
+    "assets/icons/*.svg",
+    "assets/prompts/*.md",
+]

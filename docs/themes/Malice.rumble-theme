@@ -1,0 +1,55 @@
+{
+  "name": "Malice",
+  "accent_name": "Scorponok Teal",
+
+  "bg_deep": "#33194F",
+  "bg_sunken": "#472371",
+  "bg_base": "#5C2D91",
+  "bg_surface": "#6C429C",
+  "bg_raised": "#7C57A7",
+
+  "border_subtle": "#6B44A0",
+  "border_default": "#8259B8",
+  "border_strong": "#00828A",
+
+  "accent": "#00828A",
+  "accent_hover": "#14A5AE",
+  "accent_active": "#005F66",
+  "accent_muted": "#00828A26",
+  "accent_glow": "#00828A55",
+
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#DAD3E8",
+  "text_muted": "#A79EC2",
+  "text_on_accent": "#FFFFFF",
+
+  "success": "#7A7B7D",
+  "warning": "#FF6600",
+  "error": "#FF3333",
+  "info": "#00828A",
+
+  "graph_bg": "#3A1F5C",
+  "graph_grid": "#5A3785",
+  "graph_zero": "#8259B8",
+  "graph_curve": "#00828A",
+  "graph_band": "#00828A26",
+  "graph_band_sel": "#7A7B7D",
+  "graph_handle": "#00828A",
+  "graph_text": "#DAD3E8",
+  "graph_points": "#FF6600",
+  "graph_geq": "#7A7B7D",
+
+  "scrollbar_track": "#3A1F5C",
+  "scrollbar_thumb": "#6B44A0",
+  "scrollbar_thumb_hover": "#147A85",
+
+  "font_ui": "\"Inter\", \"Segoe UI\", Arial, sans-serif",
+  "font_display": "\"Space Grotesk\", \"Inter\", \"Segoe UI\", sans-serif",
+  "font_mono": "\"IBM Plex Mono\", \"Cascadia Code\", \"Consolas\", monospace",
+
+  "radius_scale": 1.2,
+  "sheen": 1.1,
+  "bevel": 0.9,
+  "glow": 1.2,
+  "glass_alpha": 0.89
+}

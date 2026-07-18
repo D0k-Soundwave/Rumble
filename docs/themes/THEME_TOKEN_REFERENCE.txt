@@ -1,0 +1,216 @@
+RUMBLE THEME TOKEN REFERENCE
+============================
+
+Companion to blank-theme.rumble-theme. Fill that file in, save it under a new
+name, then load it with File > Import Theme (the dialog filters for
+*.rumble-theme, but any .json works too). An imported theme is copied into
+custom_themes.json in your data dir and appears in Settings > Appearance
+alongside the built-ins.
+
+A theme is a flat JSON object. Nothing is nested, and unknown keys are ignored.
+
+
+FORMAT RULES
+------------
+Colours       "#RRGGBB" or "#RRGGBBAA" (6 or 8 hex digits, with the leading #).
+              Nothing else is accepted -- no 3-digit shorthand, no "red", no
+              rgb(). Case does not matter. The AA byte is straight alpha:
+              00 = fully transparent, FF = opaque. Only the four tokens marked
+              (alpha) below are normally given one, but any colour may carry it.
+
+Levers        Plain JSON numbers (no quotes). 1.0 is the engine's baseline.
+
+name          The theme's display name. Must be filled in and must NOT collide
+              with a built-in (Soundwave, Panther, Malice, Prime, Screamer,
+              Bludgeon, Sage, System) or the import is rejected.
+
+accent_name   Free-text label for the accent colour ("Cyan", "Signal Red").
+              Cosmetic only -- it is never parsed.
+
+Missing colour tokens are silently backfilled from Soundwave's values (the
+fallback theme), so a half-filled file still imports. That is a safety net, not
+a plan: a theme with a bright accent and Soundwave's dark navy surfaces
+backfilled underneath will look like a bug. Fill everything in.
+
+
+BACKGROUNDS -- the surface ladder, darkest to nearest
+-----------------------------------------------------
+bg_deep       The layer behind everything: window backdrop, empty space.
+bg_sunken     Recessed surfaces -- text fields, combo boxes, spin boxes.
+bg_base       The default panel background; also the scrollbar groove.
+bg_surface    Cards, list rows, menus -- one step above the panel.
+bg_raised     The nearest layer: hovered rows, popups, elevated chips.
+
+Keep these ordered by lightness (each a visible step from the last, none of them
+big jumps). A dark theme runs near-black upward; a light theme runs light-grey
+upward to near-white. If two adjacent steps are too close the UI reads flat; if
+they are too far apart it reads like mismatched patches.
+
+
+BORDERS
+-------
+border_subtle    Hairlines you should barely notice -- dividers, card edges.
+border_default   The normal visible outline on inputs and buttons.
+border_strong    The focus/selection outline. Usually the accent itself.
+
+
+ACCENT
+------
+accent           The one colour that carries the theme's identity: primary
+                 buttons, the EQ curve, active states, links.
+accent_hover     Accent lightened for hover. Built-ins go roughly 15-20% lighter.
+accent_active    Accent darkened for the pressed state, roughly 15-20% darker.
+accent_muted     (alpha) Accent at ~15% for selection fills and chip backgrounds.
+                 Built-ins use the accent hex + "26" (0x26 = 38/255 = 15%).
+accent_glow      (alpha) Accent at ~33% for focus halos. Built-ins append "55".
+
+
+TEXT
+----
+text_primary     Body and heading text. This is the contrast that matters most:
+                 aim for a strong ratio against bg_surface, not just bg_deep.
+text_secondary   Sub-labels, less important values.
+text_muted       Placeholders, disabled text, hints.
+text_on_accent   Text drawn ON an accent fill (e.g. the Save button's label).
+                 Pick by the accent's brightness: near-black on a light accent,
+                 white on a dark one. Getting this backwards is the single most
+                 common way a custom theme ends up unreadable.
+
+
+SEMANTIC
+--------
+success          Confirmations, healthy state.
+warning          Cautions.
+error            Failures, clipping, destructive actions.
+info             Informational banners.
+
+Each built-in draws these from its own character palette rather than sharing one
+semantic set, so they are NOT identical across themes. Keep the meanings legible
+anyway: a green-ish success and a warm warning cost the user nothing, whereas a
+red warning next to a red error leaves them unable to tell the two apart. Where
+a palette had no usable colour for a state (no green for success, no amber for
+warning), the built-ins keep a sane semantic colour rather than force the
+palette. Whatever you pick, make sure it is actually visible on your surfaces --
+an alert nobody can see is worse than an off-brand one.
+
+
+EQ GRAPH
+--------
+graph_bg         The plot's own background -- typically a shade darker (or, on a
+                 light theme, lighter) than bg_base so the graph reads inset.
+graph_grid       Grid lines. Low contrast; they must never compete with the curve.
+graph_zero       The 0 dB line. A step stronger than the grid.
+graph_curve      The response curve. Almost always the accent.
+graph_band       (alpha) Fill of a filter's band region. Built-ins: accent + "26".
+graph_band_sel   The SELECTED band -- must contrast against graph_curve/accent,
+                 so pick a complementary hue, not another shade of the accent.
+graph_handle     The draggable filter handles. Usually the accent.
+graph_text       Axis labels and tick numbers.
+
+graph_points     Optional. Node markers. Falls back to graph_band_sel.
+graph_geq        Optional. The GraphicEQ curve. Falls back to graph_band_sel.
+graph_ir         Optional. The convolution/impulse-response curve. Falls back to
+                 graph_points, then graph_band_sel.
+
+Those three fall back rather than fail, but the fallbacks collapse distinct
+curves onto one colour -- set them if your theme shows GEQ or IR profiles.
+
+
+SCROLLBARS
+----------
+scrollbar_track        The groove. Built-ins reuse bg_base.
+scrollbar_thumb        The bar. Built-ins reuse border_default.
+scrollbar_thumb_hover  The bar under the cursor. Built-ins blend the thumb ~40%
+                       toward the accent.
+
+
+STRUCTURAL LEVERS -- shape and material, not colour
+---------------------------------------------------
+All five are optional numbers. Omit them and the engine uses its neutral
+baseline (1.0, and 0.90 for glass_alpha). They are what stop two themes with
+different palettes from feeling like the same UI recoloured.
+
+radius_scale   Corner roundness, as a multiplier on the base radii.
+               Built-in range: 0.6 (Panther, sharp stealth) to 1.2 (Malice,
+               rounded). 1.0 is standard.
+
+sheen          Gradient gloss on buttons and surfaces.
+               Built-in range: 0.7 (Panther, flat matte) to 1.3 (Bludgeon,
+               glossy). Higher = wetter, more reflective.
+
+bevel          Strength of the raised light edge on surfaces.
+               Built-in range: 0.8 (Panther) to 1.2 (Bludgeon). Higher =
+               harder, more machined edges.
+
+glow           Intensity of the accent glow and elevation drop-shadows.
+               Built-in range: 0.2 (Panther, stealth matte) to 1.2 (Malice,
+               glowy). 0 kills the glow entirely.
+
+glass_alpha    Opacity of the translucent "glass" panel fills, 0.0-1.0.
+               Built-in range: 0.87 (Soundwave, most see-through) to 0.95
+               (Panther, nearly solid). Low values let the backdrop gradient
+               show through the chrome; too low and text loses its ground.
+
+
+WHERE YOUR THEME LANDS IN THE PICKER
+------------------------------------
+You do not choose its position. Settings > Appearance and the tray menu sort
+every theme -- built-in, custom and imported alike -- by colour family (black,
+blue, indigo, violet, red, pink, orange, green, teal, yellow, white) and then by
+brightness within that family. The family comes from your accent's hue angle,
+except that any theme whose bg_base is brighter than 50% luminance is filed
+under "white" no matter what its accent is. A desaturated (grey/metal) accent on
+a very dark theme files under "black".
+
+
+A WORKED EXAMPLE: A NEUTRAL GRAPHITE THEME
+------------------------------------------
+Pure monochrome graphite on true OLED black; stealth-matte, lightly squared.
+A neutral starting point if the blank file is too abstract (it is not one of
+the shipped built-ins, so the name is free to reuse). This is the object BODY,
+not a whole file -- paste it between the { and } of blank-theme.rumble-theme
+(two tokens per line here purely to keep it readable; JSON does not care).
+
+  "name": "My Theme",              "accent_name": "Graphite",
+
+  "bg_deep": "#000000",            "bg_sunken": "#030304",
+  "bg_base": "#070708",            "bg_surface": "#0D0D0F",
+  "bg_raised": "#151517",
+
+  "border_subtle": "#161618",      "border_default": "#26262B",
+  "border_strong": "#737B8B",
+
+  "accent": "#737B8B",             "accent_hover": "#8E96A6",
+  "accent_active": "#565D6B",      "accent_muted": "#737B8B26",
+  "accent_glow": "#737B8B55",
+
+  "text_primary": "#ECECF3",       "text_secondary": "#8C8C9E",
+  "text_muted": "#4C4C58",         "text_on_accent": "#FFFFFF",
+
+  "success": "#2BD4A0",            "warning": "#FFB13C",
+  "error": "#FF5C66",              "info": "#737B8B",
+
+  "graph_bg": "#040405",           "graph_grid": "#101017",
+  "graph_zero": "#242432",         "graph_curve": "#737B8B",
+  "graph_band": "#737B8B55",       "graph_band_sel": "#FFB13C",
+  "graph_handle": "#737B8B",       "graph_text": "#34343F",
+  "graph_points": "#5F93FF",
+
+  "scrollbar_track": "#070708",    "scrollbar_thumb": "#26262B",
+  "scrollbar_thumb_hover": "#454851",
+
+  "radius_scale": 0.7,             "sheen": 0.8,
+  "bevel": 1.0,                    "glow": 0.3,
+  "glass_alpha": 0.97
+
+
+TWO OTHER WAYS TO BUILD A THEME
+-------------------------------
+Settings > Theme Creator edits every colour token live with swatch pickers,
+starting from any built-in. It cannot set the five structural levers -- for
+those, edit the JSON.
+
+File > Export Current Theme writes whichever theme is active out as a complete
+.rumble-theme file. Exporting a built-in gives you a filled-in file to modify,
+which is often faster than starting from blank (just change "name" first, or
+the import will refuse it as a built-in collision).

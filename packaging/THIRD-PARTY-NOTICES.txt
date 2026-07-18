@@ -1,0 +1,102 @@
+RUMBLE — Third-Party Notices
+================================
+
+RUMBLE is built on the following third-party components. Each is used under
+the terms of its own license, reproduced or linked below. This file is
+updated whenever a new runtime dependency is added (see requirements.txt).
+
+--------------------------------------------------------------------------
+PySide6 (6.11.1)
+--------------------------------------------------------------------------
+Home page: https://pyside.org
+License:   LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+Usage:     Qt UI toolkit bindings. Used under the LGPL-3.0 terms, dynamically
+           linked (not statically bundled into a way that would require
+           relicensing RUMBLE itself).
+
+--------------------------------------------------------------------------
+pyqtgraph (0.14.0)
+--------------------------------------------------------------------------
+Home page: http://www.pyqtgraph.org
+License:   MIT
+Usage:     EQ response graph and chart rendering.
+
+--------------------------------------------------------------------------
+numpy (2.4.6)
+--------------------------------------------------------------------------
+Home page: https://numpy.org
+License:   BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+           (numpy's own code is BSD-3-Clause; the license expression covers
+           small vendored/bundled components under their own permissive terms)
+Usage:     Numerical array operations (filter maths, IR analysis).
+
+--------------------------------------------------------------------------
+pywin32 (312)
+--------------------------------------------------------------------------
+Home page: https://github.com/mhammond/pywin32
+License:   PSF (Python Software Foundation License, permissive)
+Usage:     Windows COM/API access (registry, shell, low-level device access).
+
+--------------------------------------------------------------------------
+pycaw (20251023)
+--------------------------------------------------------------------------
+Home page: https://github.com/AndreMiras/pycaw
+License:   MIT
+Usage:     Windows WASAPI audio device interface querying — retrieves
+           supported audio formats, sample rates, and channel configurations
+           for connected audio devices.
+
+--------------------------------------------------------------------------
+comtypes (1.4.16)
+--------------------------------------------------------------------------
+Home page: https://github.com/enthought/comtypes
+License:   MIT
+Usage:     Pure-Python COM library for Windows automation — required by pycaw
+           to communicate with WASAPI device interfaces.
+
+--------------------------------------------------------------------------
+sounddevice (0.5.5)
+--------------------------------------------------------------------------
+Home page: https://github.com/spatialaudio/python-sounddevice
+License:   MIT
+Usage:     Audio I/O bindings (PortAudio) — tone/test-signal playback and
+           device stream handling for the audio engine (Phase 4).
+
+--------------------------------------------------------------------------
+PyAudioWPatch (0.2.12.8)
+--------------------------------------------------------------------------
+Home page: https://github.com/s0d3s/PyAudioWPatch
+License:   MIT
+Usage:     Windows-only PyAudio fork with WASAPI loopback capture support —
+           plain sounddevice/PortAudio has no loopback input capability, so
+           this is used specifically for the audio engine's (Phase 4)
+           loopback capture, verifying a profile's effect on real output.
+           A fork of PyAudio (also MIT-licensed).
+
+--------------------------------------------------------------------------
+PortAudio (V19.7.0-devel)
+--------------------------------------------------------------------------
+Home page: http://www.portaudio.com
+License:   MIT-style (PortAudio license; permissive, similar terms to MIT)
+Usage:     Cross-platform audio I/O library. Bundled as a compiled binary
+           inside the sounddevice wheel; not a separate RUMBLE dependency to
+           install, but distributed as part of it.
+
+--------------------------------------------------------------------------
+PyInstaller (6.20.0)
+--------------------------------------------------------------------------
+Home page: https://pyinstaller.org
+License:   GPLv2-or-later, with a bootloader exception explicitly permitting
+           use to build and distribute non-free (including commercial)
+           programs.
+Usage:     Build-time only — freezes RUMBLE into a standalone executable.
+           Not linked into, or distributed as part of, the running
+           application's own source; only the bootloader exception's terms
+           apply to the frozen output.
+
+--------------------------------------------------------------------------
+Bundled fonts
+--------------------------------------------------------------------------
+IBM Plex Mono, Space Grotesk, Inter — all licensed under the SIL Open Font
+License 1.1. Full license text for each ships alongside the font files under
+rumble/assets/fonts/*-OFL.txt.

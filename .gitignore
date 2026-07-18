@@ -1,0 +1,73 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Build artifacts
+build/
+dist/
+*.spec
+# The committed PyInstaller spec is intentional (inline comments after a
+# pattern are NOT supported by gitignore syntax -- a trailing "# ..." on the
+# same line as the pattern below would be parsed as part of the pattern
+# itself and silently fail to match, which is why this note is its own line).
+!packaging/rumble.spec
+
+# Logs
+*.log
+err.log
+out.log
+output.log
+
+# Test self-capture debug screenshot — selftest_no_scroll_on_select.py writes
+# this unconditionally on every run for manual inspection; it is not a golden
+# reference image compared against, so it churns on every test-gate run.
+tests/selftest_no_scroll_panel.png
+# Same reasoning, selftest_vu_meter_panel.py's own debug screenshot.
+tests/selftest_vu_meter_panel.png
+
+# Generated texture cache (regenerated at startup)
+data/texture_cache/
+
+# Per-measurement Spinorama curve cache (regenerated on demand, keyed by URL
+# hash — same category as texture_cache/ above)
+data/spinorama_cache/
+
+# Runtime app state — all regenerated next to the exe on first run, and not
+# bundled by packaging/rumble.spec, so kept out of version control:
+#   profiles.json     settings + active profile (rewritten as the app is used)
+#   autoeq_index.md   network cache of AutoEq INDEX.md (re-downloaded, 7-day refresh)
+#   custom_themes.json user-saved themes (per-machine user data, created on demand)
+#   spinorama_index.json network cache of the Spinorama speaker index (re-downloaded)
+data/profiles.json
+data/autoeq_index.md
+data/custom_themes.json
+data/spinorama_index.json
+
+# Ear Calibration results (per-listener names, thresholds and test runs). Same
+# category as the runtime state above -- it belongs to whoever is sitting at
+# this machine, is written as the app is used, and is recreated on demand.
+data/listeners/
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Local launcher shortcuts — machine-path-specific (hardcodes the checkout
+# location), not portable/source
+*.lnk
+
+# User working files at the repo root — personal scratch content (ad-hoc
+# screenshots, sample audio, exported test results, manual backups), not
+# source and not meant to be version-controlled.
+/Samples/
+/Trim.png
+/VU.png
+/hearing_frequency_test.txt
+/rumble_backup_*.zip

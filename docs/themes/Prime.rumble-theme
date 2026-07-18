@@ -1,0 +1,55 @@
+{
+  "name": "Prime",
+  "accent_name": "Commander Chrome",
+
+  "bg_deep": "#3D0000",
+  "bg_sunken": "#520000",
+  "bg_base": "#660000",
+  "bg_surface": "#7A1010",
+  "bg_raised": "#941F1F",
+
+  "border_subtle": "#6E1515",
+  "border_default": "#8A2323",
+  "border_strong": "#C6CBD4",
+
+  "accent": "#C6CBD4",
+  "accent_hover": "#DCE0E8",
+  "accent_active": "#A3A9B5",
+  "accent_muted": "#C6CBD426",
+  "accent_glow": "#C6CBD455",
+
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#F0D6D6",
+  "text_muted": "#C99A9A",
+  "text_on_accent": "#000000",
+
+  "success": "#2A72D6",
+  "warning": "#E6C21E",
+  "error": "#FF6B6B",
+  "info": "#2A72D6",
+
+  "graph_bg": "#4F0000",
+  "graph_grid": "#6E1515",
+  "graph_zero": "#8A2323",
+  "graph_curve": "#C6CBD4",
+  "graph_band": "#C6CBD426",
+  "graph_band_sel": "#2A72D6",
+  "graph_handle": "#C6CBD4",
+  "graph_text": "#F0D6D6",
+  "graph_points": "#E6C21E",
+  "graph_geq": "#2A72D6",
+
+  "scrollbar_track": "#4F0000",
+  "scrollbar_thumb": "#8A2323",
+  "scrollbar_thumb_hover": "#C6CBD4",
+
+  "font_ui": "\"Inter\", \"Segoe UI\", Arial, sans-serif",
+  "font_display": "\"Space Grotesk\", \"Inter\", \"Segoe UI\", sans-serif",
+  "font_mono": "\"IBM Plex Mono\", \"Cascadia Code\", \"Consolas\", monospace",
+
+  "radius_scale": 1.1,
+  "sheen": 1.2,
+  "bevel": 1.0,
+  "glow": 0.6,
+  "glass_alpha": 0.90
+}

@@ -1,0 +1,52 @@
+{
+  "name": "",
+  "accent_name": "",
+
+  "bg_deep": "#RRGGBB",
+  "bg_sunken": "#RRGGBB",
+  "bg_base": "#RRGGBB",
+  "bg_surface": "#RRGGBB",
+  "bg_raised": "#RRGGBB",
+
+  "border_subtle": "#RRGGBB",
+  "border_default": "#RRGGBB",
+  "border_strong": "#RRGGBB",
+
+  "accent": "#RRGGBB",
+  "accent_hover": "#RRGGBB",
+  "accent_active": "#RRGGBB",
+  "accent_muted": "#RRGGBBAA",
+  "accent_glow": "#RRGGBBAA",
+
+  "text_primary": "#RRGGBB",
+  "text_secondary": "#RRGGBB",
+  "text_muted": "#RRGGBB",
+  "text_on_accent": "#RRGGBB",
+
+  "success": "#RRGGBB",
+  "warning": "#RRGGBB",
+  "error": "#RRGGBB",
+  "info": "#RRGGBB",
+
+  "graph_bg": "#RRGGBB",
+  "graph_grid": "#RRGGBB",
+  "graph_zero": "#RRGGBB",
+  "graph_curve": "#RRGGBB",
+  "graph_band": "#RRGGBBAA",
+  "graph_band_sel": "#RRGGBB",
+  "graph_handle": "#RRGGBB",
+  "graph_text": "#RRGGBB",
+  "graph_points": "#RRGGBB",
+  "graph_geq": "#RRGGBB",
+  "graph_ir": "#RRGGBB",
+
+  "scrollbar_track": "#RRGGBB",
+  "scrollbar_thumb": "#RRGGBB",
+  "scrollbar_thumb_hover": "#RRGGBB",
+
+  "radius_scale": 1.0,
+  "sheen": 1.0,
+  "bevel": 1.0,
+  "glow": 1.0,
+  "glass_alpha": 0.9
+}

@@ -1,0 +1,55 @@
+{
+  "name": "Bludgeon",
+  "accent_name": "Assault Amber",
+
+  "bg_deep": "#041804",
+  "bg_sunken": "#062406",
+  "bg_base": "#082E08",
+  "bg_surface": "#0E3D0E",
+  "bg_raised": "#164E16",
+
+  "border_subtle": "#123F12",
+  "border_default": "#1E5C1E",
+  "border_strong": "#9E5508",
+
+  "accent": "#9E5508",
+  "accent_hover": "#C46E0A",
+  "accent_active": "#7A4106",
+  "accent_muted": "#9E550826",
+  "accent_glow": "#9E550855",
+
+  "text_primary": "#FFFFFF",
+  "text_secondary": "#D2DED2",
+  "text_muted": "#8FA88F",
+  "text_on_accent": "#FFFFFF",
+
+  "success": "#2FBAC7",
+  "warning": "#EAC200",
+  "error": "#F0463C",
+  "info": "#2FBAC7",
+
+  "graph_bg": "#062105",
+  "graph_grid": "#123F12",
+  "graph_zero": "#1E5C1E",
+  "graph_curve": "#9E5508",
+  "graph_band": "#9E550826",
+  "graph_band_sel": "#2FBAC7",
+  "graph_handle": "#9E5508",
+  "graph_text": "#D2DED2",
+  "graph_points": "#EAC200",
+  "graph_geq": "#2FBAC7",
+
+  "scrollbar_track": "#062406",
+  "scrollbar_thumb": "#1E5C1E",
+  "scrollbar_thumb_hover": "#7A4106",
+
+  "font_ui": "\"Inter\", \"Segoe UI\", Arial, sans-serif",
+  "font_display": "\"Space Grotesk\", \"Inter\", \"Segoe UI\", sans-serif",
+  "font_mono": "\"IBM Plex Mono\", \"Cascadia Code\", \"Consolas\", monospace",
+
+  "radius_scale": 0.8,
+  "sheen": 1.3,
+  "bevel": 1.2,
+  "glow": 0.7,
+  "glass_alpha": 0.91
+}

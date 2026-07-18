@@ -1,0 +1,9 @@
+PySide6
+pyqtgraph
+numpy
+pywin32
+pycaw
+comtypes
+sounddevice>=0.5
+PyAudioWPatch
+PyInstaller

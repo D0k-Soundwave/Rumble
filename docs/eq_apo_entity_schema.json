@@ -1,0 +1,1008 @@
+{
+  "$schema_meta": {
+    "name": "EQ / PEQ / GEQ / Equalizer APO Entity Schema",
+    "version": "2.0.0",
+    "last_updated": "2026-07-10",
+    "purpose": "Machine-readable catalog of every variable used in parametric (PEQ) and graphic (GEQ) equalizer profiles, every Equalizer APO configuration feature, how these variables depend on and constrain each other, their reasoned default values, and the ideal real-world source for each value. Intended to be consumed directly by a GUI application that authors Equalizer APO config files.",
+    "primary_sources": [
+      "https://sourceforge.net/p/equalizerapo/wiki/Configuration%20reference/",
+      "https://sourceforge.net/p/equalizerapo/wiki/Documentation/",
+      "https://webaudio.github.io/Audio-EQ-Cookbook/audio-eq-cookbook.html",
+      "https://github.com/jaakkopasanen/AutoEq/wiki/How-Does-AutoEq-Work%3F",
+      "ISO 266 preferred numbers (standard octave/third-octave center frequencies)",
+      "ISO 226:2023 equal-loudness-level contours",
+      "Harman target curve research (Olive et al., over-ear 2018 / in-ear 2019)",
+      "github.com/mirror/equalizerapo @ 53d885f7f1a097b457e17a5206b7d60f647877a8 (upstream C++ source, used to confirm LoudnessCorrection: and VSTPlugin: syntax that the SourceForge wiki does not document)",
+      "ISO 226:2003 Table 1 (equal-loudness-level contours, SPL-from-phon formula)",
+      "Olive, Welti, Khonsaripour et al., AES 2018/2019 (Harman over-ear/in-ear target curve research, as bundled by the AutoEQ project)",
+      "Knapp & Carter, 'The Generalized Correlation Method for Estimation of Time Delay,' IEEE Trans. ASSP, 1976 (GCC-PHAT)",
+      "Linkwitz, 'Active Crossover Networks for Noncoincident Drivers,' JAES 1976; Williams & Taylor, 'Electronic Filter Design Handbook' (Linkwitz-Riley crossover construction via squared Butterworth sections)"
+    ],
+    "app_naming_note": "The application this schema is reconciled against is internally named RUMBLE (Python package `rumble`) as of 2026-07-10 -- confirmed by direct source inspection (pyproject.toml, all UI strings). A rename to 'Rumble' is the user's stated intent for the eventual public release but has NOT been executed anywhere in code, package naming, or UI strings; 'Rumble' currently exists only as an internal engineering campaign/session codename in code comments (e.g. 'Rumble 4.10'). Do not describe the app as 'Rumble' in product-facing contexts derived from this schema until the rename actually ships -- refer to it as RUMBLE (or note both names with this caveat).",
+    "reconciliation_note": "Sections below marked with an 'implementation_status' or 'app_implementation' field were verified against a real, shipped codebase (the 'Rumble campaign', 39/39 action items closed 2026-07-10) rather than left as pure generic research. See docs/kb-audit/RUMBLE_RECONCILIATION_2026-07-10.md in the app repository for full citations."
+  },
+  "filter_types": {
+    "PK": {
+      "aliases": [
+        "Modal",
+        "PEQ"
+      ],
+      "description": "Peaking / bell filter. Boosts or cuts a band centered on Fc. The core building block of parametric EQ.",
+      "equalizer_apo_syntax": "Filter <n>: ON PK Fc <freq> Hz Gain <gain> dB Q <Q>",
+      "required_params": [
+        "Fc",
+        "Gain",
+        "Q_or_BW"
+      ],
+      "optional_params": [],
+      "typical_use": [
+        "room correction",
+        "headphone/IEM target correction",
+        "creative tonal shaping",
+        "resonance/feedback notching (narrow Q variant)"
+      ]
+    },
+    "LP": {
+      "aliases": [
+        "LPQ (with adjustable Q)"
+      ],
+      "description": "Low-pass filter. Passes frequencies below Fc, attenuates above. Fixed 2nd-order (12 dB/oct) response; LPQ variant allows Q to shape the resonance at the cutoff.",
+      "equalizer_apo_syntax": "Filter <n>: ON LP Fc <freq> Hz  |  ON LPQ Fc <freq> Hz Q <Q>",
+      "required_params": [
+        "Fc"
+      ],
+      "optional_params": [
+        "Q"
+      ],
+      "typical_use": [
+        "subwoofer crossover",
+        "removing ultrasonic content",
+        "taming harsh treble in bulk"
+      ]
+    },
+    "HP": {
+      "aliases": [
+        "HPQ (with adjustable Q)"
+      ],
+      "description": "High-pass filter. Passes frequencies above Fc, attenuates below. Fixed 2nd-order (12 dB/oct); HPQ allows Q control.",
+      "equalizer_apo_syntax": "Filter <n>: ON HP Fc <freq> Hz  |  ON HPQ Fc <freq> Hz Q <Q>",
+      "required_params": [
+        "Fc"
+      ],
+      "optional_params": [
+        "Q"
+      ],
+      "typical_use": [
+        "removing subsonic rumble",
+        "satellite speaker crossover (paired with subwoofer LP)",
+        "protecting small drivers from excessive excursion"
+      ]
+    },
+    "BP": {
+      "aliases": [],
+      "description": "True band-pass filter (not a peaking filter). No gain parameter -- only shapes which frequencies pass through. Different from the DCX2496 hardware unit's 'BP' which is actually a peaking filter.",
+      "equalizer_apo_syntax": "Filter <n>: ON BP Fc <freq> Hz Q <Q>",
+      "required_params": [
+        "Fc",
+        "Q"
+      ],
+      "optional_params": [],
+      "typical_use": [
+        "isolating a narrow frequency range for diagnostic/measurement purposes",
+        "telephone/lo-fi voice effects"
+      ]
+    },
+    "LS": {
+      "aliases": [
+        "LSC (center-frequency variant with dB/oct slope param)",
+        "LS 6dB",
+        "LS 12dB"
+      ],
+      "description": "Low shelf filter. Boosts/cuts everything below Fc by a constant amount. Standard LS/HS use a Q parameter to control the transition shape; LS 6dB/12dB variants use a fixed first- or second-order slope instead.",
+      "equalizer_apo_syntax": "Filter <n>: ON LS Fc <freq> Hz Gain <gain> dB [Q <Q>]  |  ON LSC <slope>dB Fc <freq> Hz Gain <gain> dB  |  ON LS 6dB/12dB Fc <freq> Hz Gain <gain> dB",
+      "required_params": [
+        "Fc",
+        "Gain"
+      ],
+      "optional_params": [
+        "Q (since v1.2.1)",
+        "slope_dB_per_oct"
+      ],
+      "typical_use": [
+        "overall bass tilt/warmth adjustment",
+        "bass boost presets",
+        "correcting headphone bass roll-off"
+      ]
+    },
+    "HS": {
+      "aliases": [
+        "HSC (center-frequency variant with dB/oct slope param)",
+        "HS 6dB",
+        "HS 12dB"
+      ],
+      "description": "High shelf filter. Boosts/cuts everything above Fc by a constant amount.",
+      "equalizer_apo_syntax": "Filter <n>: ON HS Fc <freq> Hz Gain <gain> dB [Q <Q>]  |  ON HSC <slope>dB Fc <freq> Hz Gain <gain> dB  |  ON HS 6dB/12dB Fc <freq> Hz Gain <gain> dB",
+      "required_params": [
+        "Fc",
+        "Gain"
+      ],
+      "optional_params": [
+        "Q (since v1.2.1)",
+        "slope_dB_per_oct"
+      ],
+      "typical_use": [
+        "treble brightness/darkness tilt",
+        "de-essing (broad cut)",
+        "correcting headphone treble peaks in bulk"
+      ]
+    },
+    "NO": {
+      "aliases": [],
+      "description": "Notch filter -- a very narrow, deep cut at Fc, used to surgically remove a single problem frequency.",
+      "equalizer_apo_syntax": "Filter <n>: ON NO Fc <freq> Hz [Q <Q>]",
+      "required_params": [
+        "Fc"
+      ],
+      "optional_params": [
+        "Q"
+      ],
+      "typical_use": [
+        "removing hum (50/60 Hz and harmonics)",
+        "killing a specific room mode or feedback frequency"
+      ]
+    },
+    "AP": {
+      "aliases": [],
+      "description": "All-pass filter. Does not change magnitude response (no audible gain change) but shifts phase around Fc. Used for time-alignment / phase correction between drivers or channels.",
+      "equalizer_apo_syntax": "Filter <n>: ON AP Fc <freq> Hz Q <Q>",
+      "required_params": [
+        "Fc",
+        "Q"
+      ],
+      "optional_params": [],
+      "typical_use": [
+        "phase alignment between crossed-over drivers",
+        "advanced multi-way speaker correction"
+      ]
+    },
+    "IIR_custom": {
+      "aliases": [
+        "Filter with custom coefficients"
+      ],
+      "description": "Raw biquad (or higher order) filter defined directly by transfer-function coefficients. Escape hatch for filter shapes not natively supported. Sample-rate dependent -- coefficients must be recalculated whenever sample rate changes (use the If/sampleRate expression construct).",
+      "equalizer_apo_syntax": "Filter <n>: ON IIR Order <m> Coefficients <b0> <b1> ... <bm> <a0> <a1> ... <am>",
+      "required_params": [
+        "order",
+        "coefficients"
+      ],
+      "optional_params": [],
+      "caveat": "Equalizer APO's own documentation advises against using this to reimplement standard biquads (PK/LP/HS etc.) because it runs slower than the native filter types.",
+      "typical_use": [
+        "custom/exotic filter shapes",
+        "importing coefficients generated by external DSP design tools"
+      ]
+    },
+    "GraphicEQ_band": {
+      "aliases": [
+        "GEQ band"
+      ],
+      "description": "A single (frequency, gain) control point in a GraphicEQ command. Unlike PK filters, a GEQ band has NO independent Q -- the shape between adjacent points is fixed by Equalizer APO as a straight line in log-frequency / linear-dB space. Effective 'sharpness' of any one band is entirely a function of how closely spaced its neighboring points are.",
+      "equalizer_apo_syntax": "GraphicEQ: <Freq1> <Gain1 dB>; <Freq2> <Gain2 dB>; ...",
+      "required_params": [
+        "Frequency",
+        "Gain"
+      ],
+      "optional_params": [],
+      "typical_use": [
+        "quick visual/tactile EQ (sliders)",
+        "importing/exporting simple EQ curves between tools"
+      ]
+    }
+  },
+  "core_parameters": {
+    "Fc_frequency": {
+      "unit": "Hz",
+      "description": "Center frequency (peaking/notch/bandpass/all-pass) or corner/cutoff frequency (shelf/high-pass/low-pass).",
+      "practical_range_hz": [
+        20,
+        20000
+      ],
+      "hard_constraint": "Must be strictly less than Nyquist frequency (sampleRate / 2). Values approaching Nyquist can become numerically unstable in biquad form and should be soft-capped around 0.45 x sampleRate by the app's UI.",
+      "reasoned_default": "No single numeric default -- should be sourced per-band from measurement or target-curve deviation. For a first manual band added by a user with no data, 1000 Hz (mid-band, least likely to cause an audible surprise) is a reasonable UI starting point.",
+      "depends_on": [
+        "sample_rate (ceiling)"
+      ],
+      "ideal_source_priority": [
+        "1. Frequency of a measured peak/dip in the user's own room or headphone-unit response",
+        "2. Frequency flagged by a community measurement database for the exact headphone/speaker model",
+        "3. Standard GEQ band grid (ISO 266) if the profile is graphic-EQ style",
+        "4. Manual user placement via UI (least reliable, no measurement backing)"
+      ],
+      "manual_vs_auto_generated": "Manual vs. auto-generated range philosophy: this parameter's practical/recommended range above is the research-backed bound intended for AUTO-GENERATED content (corrections, imports, fitted curves). A real app's MANUAL/expert-editing UI is legitimately free to allow a wider hard clamp for direct human entry -- that is a deliberate, reasonable choice, not an error. What matters is that auto-generation paths are actually constrained to the tighter research bound (e.g. via an explicit clamp/cap helper applied to every auto-generated curve, with any clamping event surfaced to the user rather than silent) even when the manual UI itself is more permissive. Auto-generation grids already stay inside the research-recommended 20-20,000 Hz band by construction (their own default frequency-grid bounds), so no additional tightening was needed for Fc specifically -- only the manual UI's hard clamp is wider, and that wider ceiling only ever applies to direct human entry."
+    },
+    "Gain": {
+      "unit": "dB",
+      "description": "Boost (positive) or cut (negative) applied at/around Fc.",
+      "practical_range_db": [
+        -20,
+        20
+      ],
+      "soft_recommended_range_db": [
+        -12,
+        6
+      ],
+      "reasoning": "Cuts are effectively 'free' (no headroom cost, no added distortion risk) and should always be preferred over boosts when correcting a peak. Boosts above +6 dB on a single band are an industry-standard caution threshold -- they demand more Preamp headroom (see Preamp entity) and increase risk of amplifier/driver strain and audible ringing at high Q.",
+      "reasoned_default": 0.0,
+      "depends_on": [
+        "Q (interacts on perceived/energy impact)",
+        "Preamp (every positive Gain anywhere in the chain increases the Preamp cut required)"
+      ],
+      "affects": [
+        "Preamp headroom requirement",
+        "perceived loudness of the whole profile"
+      ],
+      "ideal_source_priority": [
+        "1. Computed as (Target curve dB - Measured response dB) at that frequency",
+        "2. Value taken from a vetted community PEQ preset for the exact device",
+        "3. Manual user slider (creative/subjective EQ, not correction)"
+      ],
+      "manual_vs_auto_generated": "Manual vs. auto-generated range philosophy: this parameter's practical/recommended range above is the research-backed bound intended for AUTO-GENERATED content (corrections, imports, fitted curves). A real app's MANUAL/expert-editing UI is legitimately free to allow a wider hard clamp for direct human entry -- that is a deliberate, reasonable choice, not an error. What matters is that auto-generation paths are actually constrained to the tighter research bound (e.g. via an explicit clamp/cap helper applied to every auto-generated curve, with any clamping event surfaced to the user rather than silent) even when the manual UI itself is more permissive. Confirmed pattern: auto-generated corrections are clamped via a shared helper enforcing the default 6 dB boost cap / 12 dB cut floor, with clamping events reported through a shared summary mechanism rather than applied silently; this was extended to cover every auto-generation code path, including one (a gear-simulation delta curve) that previously had no gain bound at all."
+    },
+    "Q": {
+      "unit": "dimensionless (quality factor)",
+      "description": "Controls how narrow (high Q) or wide (low Q) the filter's influence is around Fc. Q = Fc / Bandwidth(Hz).",
+      "practical_range": [
+        0.1,
+        20
+      ],
+      "reasoned_defaults": {
+        "general_corrective_peaking_band": 1.41,
+        "butterworth_maximally_flat_shelf_or_cutoff": 0.707,
+        "surgical_notch_narrow_problem": ">= 8",
+        "broad_musical_tone_shaping": "0.3 - 0.7"
+      },
+      "reasoning": "0.707 (1/sqrt(2)) is the Butterworth constant -- the mathematically 'neutral' choice for shelving and LP/HP filters because it produces the flattest passband with no resonant bump. For peaking/bell correction filters, most auto-EQ tools (e.g. AutoEQ) solve for Q per band rather than using one constant, but cap it (commonly around Q=6) to avoid audible ringing; a fixed default of ~1.41 is a reasonable manual-mode starting point that is neither too broad nor too surgical.",
+      "convertible_to": "bandwidth_octaves",
+      "conversion_formula": "1/Q = 2*sinh( (ln2/2) * BW_oct * (w0 / sin(w0)) )  where w0 = 2*pi*Fc/sampleRate  (RBJ Audio EQ Cookbook)",
+      "depends_on": [
+        "Fc (bandwidth in Hz = Fc/Q, so same Q means wider Hz bandwidth at higher Fc)"
+      ],
+      "affects": [
+        "overlap with neighboring bands",
+        "phase/group-delay steepness",
+        "audible ringing risk when combined with high Gain"
+      ],
+      "ideal_source_priority": [
+        "1. Solved algorithmically to best fit (Target - Measured) curve within an error tolerance (as AutoEQ does)",
+        "2. Reasoned default constant from this table, scaled by filter role (corrective vs tonal vs surgical)"
+      ],
+      "manual_vs_auto_generated": "Manual vs. auto-generated range philosophy: this parameter's practical/recommended range above is the research-backed bound intended for AUTO-GENERATED content (corrections, imports, fitted curves). A real app's MANUAL/expert-editing UI is legitimately free to allow a wider hard clamp for direct human entry -- that is a deliberate, reasonable choice, not an error. What matters is that auto-generation paths are actually constrained to the tighter research bound (e.g. via an explicit clamp/cap helper applied to every auto-generated curve, with any clamping event surfaced to the user rather than silent) even when the manual UI itself is more permissive. No current auto-generation path produces a discrete per-band Q value at all -- every auto-generated correction is a gain-only curve (points, not discrete Q-bearing bands), so there is nothing to tighten yet. This remains an explicit open follow-up for whoever eventually builds a parametric-Q auto-generator (a fixed-Q crossover-design tool does not count, since its Q values come from a closed-form filter-design formula, not a free auto-generated fit)."
+    },
+    "Bandwidth_octaves": {
+      "unit": "octaves",
+      "description": "Alternative way of expressing filter width, used by the Equalizer APO 'BW Oct' filter syntax variant (matches Room EQ Wizard's FBQ2496 export format).",
+      "practical_range_octaves": [
+        0.05,
+        4
+      ],
+      "reasoned_default": 0.5,
+      "convertible_to": "Q",
+      "ideal_source_priority": [
+        "Same priority chain as Q -- pick ONE representation (Q or BW) per project to avoid rounding drift from repeated conversion."
+      ],
+      "manual_vs_auto_generated": "Manual vs. auto-generated range philosophy: this parameter's practical/recommended range above is the research-backed bound intended for AUTO-GENERATED content (corrections, imports, fitted curves). A real app's MANUAL/expert-editing UI is legitimately free to allow a wider hard clamp for direct human entry -- that is a deliberate, reasonable choice, not an error. What matters is that auto-generation paths are actually constrained to the tighter research bound (e.g. via an explicit clamp/cap helper applied to every auto-generated curve, with any clamping event surfaced to the user rather than silent) even when the manual UI itself is more permissive. Same status as Q above -- no current auto-generation path produces a discrete bandwidth value; open follow-up, not yet applicable."
+    },
+    "Slope_dB_per_oct": {
+      "unit": "dB/octave",
+      "description": "Roll-off steepness for shelving/cutoff filters expressed as an alternative to Q. Equalizer APO exposes this via the LSC/HSC 'x dB' variant and the fixed LS 6dB/12dB, HS 6dB/12dB filter types.",
+      "practical_values": [
+        6,
+        12,
+        24,
+        36,
+        48
+      ],
+      "reasoned_default": 12,
+      "reasoning": "12 dB/oct corresponds to a standard 2nd-order (single biquad) filter -- the native resolution of nearly every Equalizer APO filter type. Steeper slopes (24/36/48 dB/oct) are achieved by cascading multiple biquads at the same Fc and increase phase shift / group delay near the corner accordingly.",
+      "convertible_to": "Q (via shelf-slope parameter S in the RBJ cookbook: 1/Q = sqrt( (A + 1/A)*(1/S - 1) + 2 ) )",
+      "affects": [
+        "number of cascaded biquads needed",
+        "phase shift / group delay near Fc"
+      ],
+      "ideal_source_priority": [
+        "Crossover design requirement (acoustic target, e.g. Linkwitz-Riley 24 dB/oct = two cascaded Q=0.707 12dB/oct stages) rather than a single universal default."
+      ]
+    },
+    "Preamp": {
+      "unit": "dB (must be <= 0 in virtually all real configs)",
+      "description": "A global (or per-channel) gain offset applied before/alongside the filter chain, whose entire purpose is to prevent digital clipping when the filter chain contains net positive gain anywhere in the spectrum.",
+      "equalizer_apo_syntax": "Preamp: <value> dB",
+      "reasoned_default_formula": "Preamp (dB) = -( peak positive value of the COMBINED filter magnitude response across all frequencies ) - 0.3 to 1.0 dB extra safety margin",
+      "common_naive_shortcut": "A flat -6 dB preamp is a widely used rule-of-thumb default when the combined peak hasn't been calculated, but it is NOT reliable -- large boosts (e.g. AutoEQ bass-heavy corrections) can exceed 6 dB, requiring more headroom, while a purely-cuts profile needs none at all and a blanket -6dB just wastes dynamic range/loudness.",
+      "critical_implementation_note": "The GUI app MUST calculate the actual combined frequency response of ALL active filters (they can constructively stack at overlapping frequencies) rather than naively summing each filter's own Gain value, which over- or under-estimates the true peak depending on band overlap.",
+      "depends_on": [
+        "Gain (every band)",
+        "Q (wider/overlapping bands stack more)"
+      ],
+      "affects": [
+        "overall perceived loudness of the profile",
+        "clipping risk"
+      ],
+      "ideal_source_priority": [
+        "1. Computed automatically from the combined filter response peak (see formula above)",
+        "2. Manual override by an advanced user who understands the tradeoff",
+        "3. Flat -6 dB fallback ONLY if the app cannot compute the combined response for some reason"
+      ]
+    },
+    "Sample_Rate": {
+      "unit": "Hz",
+      "description": "The audio pipeline's operating sample rate. Not itself an EQ parameter, but every biquad coefficient and every Nyquist-adjacent Fc constraint is a function of it.",
+      "common_values": [
+        44100,
+        48000,
+        88200,
+        96000,
+        176400,
+        192000
+      ],
+      "reasoned_default": 48000,
+      "reasoning": "48 kHz is the modern Windows default output rate for most consumer audio devices. However this MUST be treated as a fallback only -- Equalizer APO exposes the live value via the 'sampleRate' expression constant and the app should read the actual device rate rather than assume one, since custom-coefficient IIR filters and Nyquist-proximity checks are wrong if the assumed rate doesn't match reality.",
+      "affects": [
+        "Nyquist ceiling for Fc",
+        "custom IIR filter coefficient validity",
+        "exact biquad coefficient values for every filter"
+      ],
+      "ideal_source_priority": [
+        "1. Query the live Windows audio endpoint's current format/sample rate directly",
+        "2. Read the Equalizer APO 'sampleRate' expression constant at config-generation/runtime",
+        "3. 48000 Hz as a last-resort assumption"
+      ]
+    },
+    "Channel_scope": {
+      "unit": "enum (channel identifiers)",
+      "description": "Which physical channel(s) a given Preamp/Filter block applies to. Set via the Channel: command; omitted = applies to all channels.",
+      "reasoned_default": "all",
+      "important_caveat": "Equalizer APO's own docs warn against scoping low-frequency filters to the LFE channel only -- most systems apply bass redirection AFTER Equalizer APO, so an LFE-only bass filter often has no effect on redirected bass. Low-frequency filters should be applied to all channels.",
+      "ideal_source_priority": [
+        "User's detected speaker/headphone channel configuration (mono/stereo/quad/surround/5.1/7.1) from the Windows audio endpoint, mapped to Equalizer APO's supported Channel identifiers table."
+      ]
+    },
+    "Delay": {
+      "unit": "ms (preferred) or samples",
+      "description": "Time-shifts audio on the selected channel(s). Not a frequency-domain EQ parameter but part of the same config surface -- relevant for multi-speaker/subwoofer time alignment.",
+      "equalizer_apo_syntax": "Delay: <t> ms  |  Delay: <n> samples",
+      "reasoning": "Milliseconds are preferred over samples because they give a sample-rate-independent result (Equalizer APO's own recommendation).",
+      "ideal_source_priority": [
+        "1. Measured physical/acoustic distance difference between speakers/drivers -- directly achievable via an automated mic-sweep time-alignment measurement (an exponential/Farina sweep played per channel, arrival time detected via GCC-PHAT cross-correlation, robust against room-reflection false peaks, results rebased so the earliest-arriving channel gets 0 ms since delay can only be added, never subtracted). This is no longer a purely theoretical 'ideal' -- it is a real, in-app capability distinct from a user manually measuring with a tape measure.",
+        "2. Manual user entry (e.g. from a tape-measure distance converted via distance_m / 343 * 1000, or a tooltip-provided ~1 ms per 34 cm rule of thumb) when automated measurement isn't available or practical (no measurement microphone, etc.)."
+      ]
+    }
+  },
+  "graphic_eq": {
+    "standard_band_sets_iso266": {
+      "10_band_octave": [
+        31.5,
+        63,
+        125,
+        250,
+        500,
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "15_band_two_thirds_octave": [
+        25,
+        40,
+        63,
+        100,
+        160,
+        250,
+        400,
+        630,
+        1000,
+        1600,
+        2500,
+        4000,
+        6300,
+        10000,
+        16000
+      ],
+      "31_band_third_octave": [
+        20,
+        25,
+        31.5,
+        40,
+        50,
+        63,
+        80,
+        100,
+        125,
+        160,
+        200,
+        250,
+        315,
+        400,
+        500,
+        630,
+        800,
+        1000,
+        1250,
+        1600,
+        2000,
+        2500,
+        3150,
+        4000,
+        5000,
+        6300,
+        8000,
+        10000,
+        12500,
+        16000,
+        20000
+      ]
+    },
+    "interpolation_rule": "Equalizer APO interpolates linearly between adjacent GraphicEQ points in log-frequency / linear-dB space (a straight line on a standard log-frequency EQ graph). Outside the lowest/highest specified band, the response is flat.",
+    "entity_relationship_to_peq": "GEQ-to-PEQ conversion is implemented (one direction only); PEQ-to-GEQ is not implemented. The GEQ-to-PEQ method: each significant GEQ point 'owns' a log-frequency region (its own span plus half the distance to each neighbor), which is converted to a per-band Q via the standard Q/bandwidth relationship -- a directly derived relationship (denser grid produces narrower natural bandwidth), not a tuned constant. Band center frequency is the geometric mean of the owned region's edges. Because adjacent bands' skirts bleed into each other's center frequency once combined (the same way cascaded biquads stack in dB), an iterative correction pass (a bounded Newton-Raphson solve against a finite-difference Jacobian, falling back to least-squares if the Jacobian is singular) adjusts each band's gain so the final combined response matches the original GEQ curve as closely as possible. If the result must fit within a maximum band count, bands are merged (weighted-average, never silently dropped) rather than truncated. The maximum divergence between the original GEQ response and the converted PEQ response is computed and surfaced to the caller rather than assuming a perfect match. Both directions of GEQ<->PEQ conversion remain inherently lossy -- a bell-shaped peaking filter and a piecewise-linear interpolated curve cannot represent each other exactly -- this method minimizes, not eliminates, that divergence.",
+    "ideal_source_priority": [
+      "ISO 266 standard grid (10/15/31 band) for interoperability with hardware/other software",
+      "Custom grid only if the app has a specific reason (e.g. matching a specific external tool's export format)"
+    ]
+  },
+  "equalizer_apo_commands": {
+    "Preamp": {
+      "syntax": "Preamp: <value> dB",
+      "scope": "filtering command",
+      "notes": "Multiple Preamp lines affecting the same channel are summed."
+    },
+    "Filter": {
+      "syntax": "Filter <n>: ON <Type> Fc <freq> Hz [Gain <g> dB] [Q <q> | BW Oct <bw>]",
+      "scope": "filtering command",
+      "notes": "Filter number n is not interpreted by Equalizer APO and can be omitted entirely."
+    },
+    "Filter_custom_IIR": {
+      "syntax": "Filter <n>: ON IIR Order <m> Coefficients <b0...bm> <a0...am>",
+      "scope": "filtering command",
+      "notes": "Sample-rate dependent; combine with If/sampleRate branches or inline Eval expressions to stay correct across devices."
+    },
+    "Delay": {
+      "syntax": "Delay: <t> ms | Delay: <n> samples",
+      "scope": "filtering command"
+    },
+    "Copy": {
+      "syntax": "Copy: <target>=<factor>*<source>+... | <target>=<source>+... | <target>=<constant>+...",
+      "scope": "filtering command",
+      "notes": "Used for channel mixing/routing, e.g. down-mixing, muting a channel, or feeding one channel's signal into another (constant values must include a decimal point to disambiguate from channel numbers)."
+    },
+    "GraphicEQ": {
+      "syntax": "GraphicEQ: <freq1> <gain1>; <freq2> <gain2>; ...",
+      "scope": "filtering command"
+    },
+    "Convolution": {
+      "syntax": "Convolution: <filename>",
+      "scope": "filtering command",
+      "notes": "Applies an impulse-response file (wav/flac/ogg via libsndfile). Sample rate of the IR file MUST match the device's sample rate. Linear-phase IRs cost latency equal to half the file length; minimum-phase IRs have lower but less consistent latency."
+    },
+    "Include": {
+      "syntax": "Include: <filename>",
+      "scope": "control command",
+      "notes": "Loads another config file inline -- lets a profile be organized as reusable pieces (e.g. a shared Preamp/base file plus a per-headphone correction file)."
+    },
+    "Device": {
+      "syntax": "Device: <pattern 1>; <pattern 2>; ...",
+      "scope": "control command",
+      "notes": "Scopes all following commands (until the next Device command) to output/input devices whose name+connection+GUID string matches the pattern. Special pattern 'all' always matches."
+    },
+    "Channel": {
+      "syntax": "Channel: <position 1> <position 2> ...",
+      "scope": "control command",
+      "notes": "Scopes following Filter/Preamp commands to specific channels. Special value 'all' selects every channel."
+    },
+    "Stage": {
+      "syntax": "Stage: pre-mix | post-mix | capture",
+      "scope": "control command",
+      "notes": "Chooses where in the Windows audio pipeline filtering happens. Default is post-mix for output devices and capture for input devices. Pre-mix is per-application (more CPU) and mainly needed for channel-count-dependent logic like upmixing."
+    },
+    "If_ElseIf_Else_EndIf": {
+      "syntax": "If: <expr> / ElseIf: <expr> / Else: / EndIf:",
+      "scope": "expression command",
+      "notes": "Conditionally applies blocks of config, e.g. branching on sampleRate or inputChannelCount."
+    },
+    "Eval_and_inline_expressions": {
+      "syntax": "Eval: <expr>  |  inline via backticks inside another command's parameters",
+      "scope": "expression command",
+      "available_constants": [
+        "e",
+        "pi",
+        "inputChannelCount",
+        "outputChannelCount",
+        "sampleRate",
+        "deviceName",
+        "connectionName",
+        "deviceGuid",
+        "stage"
+      ],
+      "available_functions": [
+        "abs",
+        "sin/cos/tan/sinh/cosh/tanh",
+        "ln/log/log10/exp",
+        "sqrt",
+        "min/max/sum",
+        "str2dbl",
+        "strlen",
+        "tolower/toupper",
+        "sizeof",
+        "regexSearch",
+        "regexReplace",
+        "readRegString",
+        "readRegDWORD"
+      ]
+    },
+    "LoudnessCorrection": {
+      "syntax": "LoudnessCorrection: State (0|1) ReferenceLevel <int dB> ReferenceOffset <int dB> [Attenuation <0.0-1.0>]",
+      "scope": "filtering command",
+      "notes": "Not documented on the official SourceForge Configuration Reference wiki -- confirmed directly from Equalizer APO's own C++ source (filters/loudnessCorrection/LoudnessCorrectionFilter.cpp, VolumeController.cpp). State/ReferenceLevel/ReferenceOffset are required; Attenuation is optional (default 1.0, hard-clamped to [0.0, 1.0]). Reads live WASAPI endpoint (master, device-wide, not per-app) volume via IAudioEndpointVolume::GetMasterVolumeLevel. Applies two fixed-frequency shelf filters driven by volDiff = referenceLevel - referenceOffset - volume: a 75 Hz low shelf (Q=0.52) and a 10,000 Hz high shelf (Q=0.9), each with its own asymmetric boost/cut formula (boost side is preamp-compensated). Both shelf gains under 0.2 dB triggers a neutral/bypass shortcut. IMPORTANT: this is NOT an ISO 226 equal-loudness-contour computation -- no comment or constant in the upstream source cites ISO 226, Fletcher-Munson, or Robinson-Dadson; the 75 Hz/10 kHz corners and its numeric constants (0.55, 0.225, 0.175, 90, 100, 80) appear to be the original author's own hand-tuned heuristic, despite the superficially similar purpose to a real equal-loudness compensation curve."
+    },
+    "VSTPlugin": {
+      "syntax": "VSTPlugin: Library \"<path.dll>\" [ChunkData \"<base64>\"] [<ParamName> <float>]...",
+      "scope": "filtering command",
+      "notes": "Not documented on the official SourceForge Configuration Reference wiki -- confirmed directly from Equalizer APO's own C++ source (filters/VSTPluginFilter.cpp, VSTPluginFilterFactory.cpp, helpers/VSTPluginLibrary.cpp). Space-separated, quote-aware key/value pairs; any key other than Library/ChunkData is treated as a named plugin float parameter. Library is required (relative paths resolve against the plugin's own default plugin-path helper; absolute paths used as-is). ChunkData and named float parameters are mutually exclusive in practice. Ordinary inline filter-chain command -- can appear per-channel/per-stage/inside an If block like any other filtering command, not a device-global plugin host. VST2 only (classic AEffect/vstPluginMain ABI) -- no native VST3 support. Plugin DLL bitness must exactly match the running APO process (32/64-bit) or it fails to load. Any failure (file not found, load failure, missing entry points, wrong architecture) logs a message and silently skips adding the filter -- it is not a hard config-parse error."
+    }
+  },
+  "channel_configurations": {
+    "Mono": {
+      "C": 1
+    },
+    "Stereo": {
+      "L": 1,
+      "R": 2
+    },
+    "Quadraphonic": {
+      "L": 1,
+      "R": 2,
+      "RL": 3,
+      "RR": 4
+    },
+    "Surround": {
+      "L": 1,
+      "R": 2,
+      "C": 3,
+      "RC": 4
+    },
+    "5.1_Surround_variant_A": {
+      "L": 1,
+      "R": 2,
+      "C": 3,
+      "LFE": 4,
+      "SL": 5,
+      "SR": 6
+    },
+    "5.1_Surround_variant_B": {
+      "L": 1,
+      "R": 2,
+      "C": 3,
+      "LFE": 4,
+      "RL": 5,
+      "RR": 6
+    },
+    "7.1_Surround": {
+      "L": 1,
+      "R": 2,
+      "C": 3,
+      "LFE": 4,
+      "RL": 5,
+      "RR": 6,
+      "SL": 7,
+      "SR": 8
+    }
+  },
+  "psychoacoustic_targets": {
+    "harman_over_ear_2018": {
+      "applies_to": "over-ear / on-ear headphones",
+      "description": "Empirically derived preference target from Harman/Olive et al. research; widely used as the default 'neutral-preferred' correction goal for over-ear headphone EQ.",
+      "use_as": "target curve in (Target - Measured) EQ generation",
+      "implementation_status": "Implemented and cited: sourced from AutoEQ's own 'Harman over-ear 2018.csv' (118 points), resampled onto a 20 Hz-20 kHz, 12-points-per-octave log grid via log-linear interpolation. Not an abstract description -- a real, selectable, loaded target curve as of 2026-07-09."
+    },
+    "harman_in_ear_2019": {
+      "applies_to": "in-ear monitors / earbuds",
+      "description": "Companion Harman target specifically derived for IEMs, which have different coupling/leakage behavior than over-ear designs and therefore need a distinct bass/treble target.",
+      "use_as": "target curve in (Target - Measured) EQ generation for IEMs",
+      "implementation_status": "Implemented and cited: sourced from AutoEQ's own 'Harman in-ear 2019.csv', same resampling approach as the over-ear curve. Real, selectable, loaded target curve as of 2026-07-09."
+    },
+    "diffuse_field": {
+      "applies_to": "studio monitoring / 'neutral' reference headphones",
+      "description": "Target representing an omnidirectional, reverberant sound field; generally has less bass emphasis than Harman targets which were tuned for listener preference rather than pure measurement neutrality.",
+      "use_as": "target curve for studio-neutral use cases",
+      "implementation_status": "Implemented and cited: sourced from AutoEQ's own 'Diffuse field 5128.csv' (B&K 5128 head-and-torso-simulator variant, chosen over the GRAS KEMAR/ISO 11904-1 variants AutoEQ also bundles as the more commonly cited current rig). Real, selectable, loaded target curve as of 2026-07-09."
+    },
+    "free_field": {
+      "applies_to": "loudspeaker-emulation headphone correction",
+      "description": "Target compensating so headphones perceptually resemble a single loudspeaker in front of the listener in an anechoic space.",
+      "use_as": "target curve when trying to make headphones sound like frontal speaker playback",
+      "implementation_status": "Researched, NOT implemented. No numerically-complete, freely-available free-field dataset was found during implementation -- AutoEQ's own targets/ directory publishes no free-field curve, and ISO 11904-1's free-field part is paywalled (several papers describe the curve qualitatively without publishing a full point table). Left as an explicit open follow-up rather than reconstructed/guessed, per a project convention against inventing uncited numeric constants."
+    },
+    "iso_226_equal_loudness": {
+      "description": "Standardized equal-loudness-level contours (ISO 226:2003 Table 1) describing how perceived loudness varies with frequency at different absolute playback levels. Implemented: the real 29-frequency coefficient table and SPL-from-phon formula, verified against independent open-source reproductions and against the formula's own defining identity (SPL at 1 kHz equals the phon value, by definition of the phon scale). Produces a compensation curve between a calibrated reference phon/volume and the live current volume (read from the same WASAPI master-volume API Equalizer APO's own LoudnessCorrection: command uses), applied as an independent, always-recalculated layer on top of any static correction EQ -- composed before the combined-response/headroom calculation so headroom automatically accounts for it. Disabled by default; flat/no-op whenever uncalibrated or a live volume read fails.",
+      "use_as": "A real, built, volume-linked loudness-compensation layer, distinct in kind from Equalizer APO's own native LoudnessCorrection: command (see equalizer_apo_commands.LoudnessCorrection) -- that command is a hand-tuned two-shelf heuristic that is NOT an ISO 226 computation despite the similar purpose; the two should not be treated as interchangeable or as documenting the same underlying math."
+    }
+  },
+  "measurement_and_smoothing": {
+    "measurement_source_hierarchy": [
+      "1. Real measurement of the user's own physical unit/room (highest trust) -- directly actionable via a real measurement-import path (e.g. importing REW's frequency-response or Filter-Settings export formats) that can be weighted to deliberately outweigh even the best community-database tier when blended, rather than remaining a purely theoretical best case.",
+      "2. Vetted community measurement database entry for the exact model -- when multiple independent measurements of the same device exist within one provider, they can be automatically detected, averaged into a consensus curve (optionally weighted by a per-entry quality tier where the provider publishes one), and their spread displayed, rather than the app arbitrarily picking a single measurement or treating 'community database' as one undifferentiated tier.",
+      "3. Manufacturer-published frequency response spec (lowest trust -- typically smoothed and marketing-oriented, no phase/off-axis data)",
+      "4. No measurement available -- fall back to applying the chosen target curve directly with a flat assumed starting response, clearly flagged to the user as unverified"
+    ],
+    "smoothing_conventions": {
+      "default": "1/12 octave",
+      "reasoning": "1/12 octave preserves musically-relevant detail while suppressing measurement-rig noise. AutoEQ-style pipelines apply progressively heavier smoothing above roughly 6-8 kHz because measurement variance (rig/ear geometry sensitivity) increases sharply there.",
+      "high_frequency_rule": "No positive gain (boost) recommended above ~8-10 kHz -- differences in that range are dominated by measurement-rig and pinna variance rather than the actual device, so boosting risks amplifying noise/artifacts rather than a real deficiency."
+    }
+  },
+  "dsp_reference": {
+    "biquad_cookbook": {
+      "source": "RBJ Audio EQ Cookbook",
+      "core_intermediate_terms": {
+        "w0": "2 * pi * Fc / sampleRate",
+        "A": "10^(Gain_dB / 40)  (amplitude, used for shelf/peaking gain)",
+        "alpha_from_Q": "sin(w0) / (2*Q)",
+        "alpha_from_bandwidth": "sin(w0) * sinh( (ln2/2) * BW_oct * w0/sin(w0) )",
+        "alpha_from_shelf_slope": "(sin(w0)/2) * sqrt( (A + 1/A)*(1/S - 1) + 2 )"
+      },
+      "practical_implication": "Every biquad coefficient set is a function of BOTH the user-facing parameters (Fc, Gain, Q/BW/Slope) AND the sample rate. The same 'Fc 100 Hz, Q 1.0' filter produces different raw coefficients at 44.1kHz vs 48kHz vs 96kHz -- Equalizer APO recalculates this internally, but any custom-IIR export must account for it explicitly."
+    },
+    "phase_and_latency": {
+      "minimum_phase_biquads": "All native Equalizer APO filter types (PK/LP/HP/LS/HS/NO/AP/BP) are minimum-phase IIR designs -- near-zero added latency, some inherent phase shift concentrated around each filter's corner/center frequency. Good default for general listening, gaming, and low-latency use.",
+      "linear_phase_FIR": "Achieved only via the Convolution command with a linear-phase impulse response file. Zero phase distortion but adds latency equal to half the impulse response length, and can introduce audible 'pre-ringing' on transients. Reserve for critical mastering/studio-monitoring use cases where the user explicitly accepts the latency tradeoff.",
+      "decision_rule": "Default to native minimum-phase Filter/GraphicEQ commands. Only surface Convolution/linear-phase as an advanced opt-in."
+    },
+    "cascading_and_overlap": {
+      "description": "When multiple bands' frequency responses overlap, their dB gains do NOT simply add arithmetically in perceived loudness, but they DO add in the underlying linear-magnitude transfer function -- meaning the true combined peak can exceed any single band's stated Gain. This is precisely why Preamp must be computed from the combined response, not from a naive per-band sum (see 'Preamp' entity).",
+      "cpu_and_stability": "Equalizer APO explicitly recommends using its native filter types over custom IIR chains for performance; there is no hard documented cap on filter count, but practical headphone-correction profiles typically use 5-20 PK bands (per AutoEQ convention) -- beyond that, diminishing returns and increased ringing/CPU cost outweigh accuracy gains."
+    },
+    "crossover_design": {
+      "description": "Linkwitz-Riley crossover construction via squared (cascaded) Butterworth sections -- LR4 (24 dB/oct) is two cascaded 2nd-order Butterworth sections at Q = 1/sqrt(2) each; LR8 (48 dB/oct) is two cascaded 4th-order Butterworth filters, each of which itself needs two sections at two different Q values, for four total stages. This is the standard method for constructing a Linkwitz-Riley filter (an order-N Butterworth response, squared) rather than a naive repeated-identical-Q cascade, which does not sum flat to 0 dB across the transition band the way a true LR crossover does.",
+      "q_derivation_formula": "Standard analog-prototype Butterworth pole-angle formula: theta_k = (2k-1)*pi/(2*N), Q_k = 1 / (2*cos(theta_k)), for k = 1..N/2, where N is the Butterworth order corresponding to the desired LR slope (24 dB/oct -> N=2 [the trivial case, Q=1/sqrt(2)]; 48 dB/oct -> N=4). The resulting Butterworth Q list is used TWICE (each section appears twice) to build the actual LR cascade.",
+      "slope_to_order_mapping": {
+        "24_dB_per_oct": "Butterworth order 2 (LR4)",
+        "48_dB_per_oct": "Butterworth order 4 (LR8)"
+      },
+      "implementation_note": "No new filter primitive is required to build a crossover -- Equalizer APO's native LP/HP filter types are already single 2nd-order (12 dB/oct) biquads, so an LR crossover is simply an assembly of existing filter primitives at matched Fc with the derived Q values. Optional phase alignment between the resulting high-pass and low-pass branches (e.g. against a third-party crossover that can't be edited, like a powered subwoofer's built-in low-pass) can be added via a cascade of AP (all-pass) filters at the same Fc/Q list.",
+      "sources": [
+        "Linkwitz, 'Active Crossover Networks for Noncoincident Drivers,' JAES 1976",
+        "Williams & Taylor, 'Electronic Filter Design Handbook'"
+      ]
+    }
+  },
+  "entity_relationships": [
+    {
+      "from": "Filter Type",
+      "to": "Required/Optional Parameters",
+      "relationship": "determines",
+      "note": "Each filter type fixes which of Fc/Gain/Q/BW/Slope are required, optional, or not applicable."
+    },
+    {
+      "from": "Sample_Rate",
+      "to": "Fc",
+      "relationship": "constrains (ceiling)",
+      "note": "Fc must stay below Nyquist (sampleRate/2); UI should soft-cap around 0.45x sampleRate."
+    },
+    {
+      "from": "Sample_Rate",
+      "to": "IIR_custom coefficients",
+      "relationship": "determines",
+      "note": "Every custom biquad coefficient set is only valid for the sample rate it was computed for."
+    },
+    {
+      "from": "Fc",
+      "to": "Q",
+      "relationship": "combines to produce",
+      "note": "Effective bandwidth in Hz = Fc / Q; same Q value spans more Hz at higher Fc."
+    },
+    {
+      "from": "Q",
+      "to": "Bandwidth_octaves",
+      "relationship": "mathematically convertible",
+      "note": "Use RBJ cookbook formula; pick one representation per project to avoid rounding drift."
+    },
+    {
+      "from": "Slope_dB_per_oct",
+      "to": "Q",
+      "relationship": "mathematically convertible (shelf-only)",
+      "note": "Via shelf-slope parameter S in the RBJ cookbook."
+    },
+    {
+      "from": "Gain (every band)",
+      "to": "Preamp",
+      "relationship": "requires headroom in",
+      "note": "Preamp must be at least as negative as the peak COMBINED positive gain across the spectrum, not the sum of individual band gains."
+    },
+    {
+      "from": "Q (overlap)",
+      "to": "Preamp",
+      "relationship": "amplifies headroom requirement",
+      "note": "Wider/overlapping high-gain bands stack constructively, raising the true combined peak above any single band's stated Gain."
+    },
+    {
+      "from": "Filter Count / Q",
+      "to": "Ringing & Phase Smearing risk",
+      "relationship": "increases risk",
+      "note": "Many narrow, high-Q, high-gain bands cascaded together raise audible ringing and group-delay risk."
+    },
+    {
+      "from": "Measured Frequency Response",
+      "to": "Gain (per band)",
+      "relationship": "source for",
+      "note": "Corrective Gain values are ideally computed as Target curve minus Measured response at each frequency."
+    },
+    {
+      "from": "Target Curve (Harman/diffuse-field/etc.)",
+      "to": "Gain (per band)",
+      "relationship": "source for",
+      "note": "Defines the 'goal' shape the corrective EQ is trying to reach."
+    },
+    {
+      "from": "Smoothing",
+      "to": "Measured Frequency Response",
+      "relationship": "conditions before use",
+      "note": "Raw measurement noise must be smoothed (1/12 oct typical) before being used to derive corrective Gain, else the EQ chases rig noise."
+    },
+    {
+      "from": "Channel_scope",
+      "to": "Filter / Preamp / Delay",
+      "relationship": "scopes",
+      "note": "All filtering/level/delay commands apply only to the channels selected by the most recent Channel: command (default = all)."
+    },
+    {
+      "from": "Device pattern",
+      "to": "entire config block",
+      "relationship": "scopes",
+      "note": "Everything after a Device: command applies only when the active playback/recording device matches."
+    },
+    {
+      "from": "Stage (pre-mix/post-mix/capture)",
+      "to": "CPU cost & upmix visibility",
+      "relationship": "determines",
+      "note": "pre-mix runs per-application (more CPU, sees per-app channel count); post-mix/capture run once per device (default, cheaper)."
+    },
+    {
+      "from": "GraphicEQ band spacing",
+      "to": "implicit per-band Q",
+      "relationship": "determines",
+      "note": "GEQ bands have no explicit Q; their real-world 'sharpness' is a side effect of how closely the surrounding points are spaced."
+    },
+    {
+      "from": "Distance between speakers/drivers",
+      "to": "Delay",
+      "relationship": "source for",
+      "note": "Delay (ms) should be computed from measured physical/acoustic distance difference, not guessed."
+    },
+    {
+      "from": "Convolution impulse response sample rate",
+      "to": "Sample_Rate (device)",
+      "relationship": "must match exactly",
+      "note": "Equalizer APO cannot create the convolver if the IR file's sample rate differs from the live device rate."
+    },
+    {
+      "from": "Linear-phase Convolution length",
+      "to": "Added latency",
+      "relationship": "determines",
+      "note": "Linear-phase IR latency = half the file length; minimum-phase IR has lower but inconsistent latency."
+    },
+    {
+      "from": "Speaker directivity averages (Spinorama horizontal/vertical)",
+      "to": "Auto-correction boost cap",
+      "relationship": "proportionally damps",
+      "note": "A speaker's summarized directivity angle (the narrower of its horizontal/vertical average) proportionally reduces how much boost an auto-generated correction is allowed to apply -- full cap above a wide-directivity threshold, damped toward half the cap at/below a narrow-directivity threshold, linearly interpolated between. Thresholds were calibrated against real measurement data showing a clean gap between well-behaved and poorly-behaved speaker directivity, not chosen arbitrarily."
+    },
+    {
+      "from": "Gap between Listening-Window and Sound-Power/Early-Reflections curves",
+      "to": "Auto-correction at that frequency",
+      "relationship": "outright suppresses (not just damps)",
+      "note": "Distinct from the proportional damping above: when a speaker's on-axis/listening-window response diverges sharply from its own local trend relative to its sound-power or early-reflections curve, that divergence signals a directivity/radiated-power artifact rather than a genuine response error worth correcting -- boosting it would raise on-axis level without fixing the underlying radiated-power problem, and can worsen off-axis sound. Correction is suppressed (toward a small residual fraction, not necessarily zero) in proportion to how far the gap exceeds its own smoothed local trend, calibrated against real measurement data showing a clean separation between well-behaved coaxial/waveguide designs and poorly-behaved crossover-lobing designs."
+    },
+    {
+      "from": "Device-trigger auto-switch rules",
+      "to": "Native Equalizer APO If/ElseIf/Else/EndIf syntax",
+      "relationship": "can be auto-generated into",
+      "note": "Device-trigger rules (matching on deviceName/connectionName) can be translated automatically into a native If/ElseIf/Else/EndIf block using the exact expression syntax already documented in equalizer_apo_commands.If_ElseIf_Else_EndIf -- exported for manual copy/paste as a complement to (not replacement for) an app-layer Include:-rewriting switching mechanism. App-trigger and time-trigger rules have no native equivalent, because Equalizer APO's expression language has no process-identity or wall-clock variable -- these are explicitly reported as untranslatable rather than silently dropped."
+    }
+  ],
+  "industry_standard_fallback_defaults": [
+    {
+      "variable": "Q (general peaking/corrective band)",
+      "default": 1.41,
+      "reasoning": "Neither too surgical nor too broad; a safe general-purpose starting point when no fitting algorithm is run."
+    },
+    {
+      "variable": "Q (shelf / LP / HP, 'neutral')",
+      "default": 0.707,
+      "reasoning": "Butterworth constant -- maximally flat response, standard DSP convention."
+    },
+    {
+      "variable": "Q (surgical notch)",
+      "default": 8,
+      "reasoning": "Narrow enough to target a single problem tone (hum, feedback, room mode) without collateral effect on neighboring frequencies."
+    },
+    {
+      "variable": "Filter order / slope for LP/HP",
+      "default": "12 dB/oct (2nd order)",
+      "reasoning": "Matches Equalizer APO's native single-biquad resolution; steeper slopes require explicit cascading."
+    },
+    {
+      "variable": "Preamp safety margin beyond computed peak",
+      "default": "0.3 - 1.0 dB extra cut",
+      "reasoning": "Accounts for rounding/measurement/algorithmic error so real-world playback never clips."
+    },
+    {
+      "variable": "Max recommended single-band boost",
+      "default": 6,
+      "unit": "dB",
+      "reasoning": "Soft industry convention; beyond this, prefer widening the band or accept the deviation rather than risking driver/amp strain and excessive preamp cuts."
+    },
+    {
+      "variable": "Sample rate assumption if undetectable",
+      "default": 48000,
+      "unit": "Hz",
+      "reasoning": "Modern Windows default output format; always prefer live detection over this fallback."
+    },
+    {
+      "variable": "Smoothing applied to measured curves",
+      "default": "1/12 octave (heavier above ~6-8kHz)",
+      "reasoning": "AutoEQ-style convention balancing detail retention against measurement-rig noise."
+    },
+    {
+      "variable": "Max boost frequency ceiling",
+      "default": 8000,
+      "unit": "Hz",
+      "reasoning": "Avoid boosting above this without strong measurement confidence -- variance from rig/pinna dominates real device differences up here."
+    },
+    {
+      "variable": "GEQ band grid",
+      "default": "ISO 266 15-band or 31-band set",
+      "reasoning": "Matches hardware EQ and Room EQ Wizard / Equalizer APO's own documented example, ensuring interoperability."
+    },
+    {
+      "variable": "Default target curve, over-ear headphones",
+      "default": "Harman over-ear 2018",
+      "reasoning": "Most widely validated preference target for this form factor."
+    },
+    {
+      "variable": "Default target curve, IEMs",
+      "default": "Harman in-ear 2019",
+      "reasoning": "Companion target accounting for IEM-specific coupling behavior."
+    },
+    {
+      "variable": "Default target curve, studio/neutral use case",
+      "default": "Diffuse-field",
+      "reasoning": "Represents measurement-neutral rather than preference-tuned response."
+    },
+    {
+      "variable": "Default Equalizer APO Stage",
+      "default": "post-mix (output) / capture (input)",
+      "reasoning": "Equalizer APO's own documented default; cheaper and correct for the vast majority of use cases."
+    },
+    {
+      "variable": "Default Channel scope for bass/LFE filters",
+      "default": "all channels (not LFE-only)",
+      "reasoning": "Explicit warning in Equalizer APO docs: bass redirection often happens after processing, so LFE-only filters may not reach the subwoofer."
+    },
+    {
+      "variable": "Delay units",
+      "default": "milliseconds",
+      "reasoning": "Sample-rate independent, per Equalizer APO's own recommendation."
+    },
+    {
+      "variable": "PEQ band count for headphone correction",
+      "default": "5-10 (up to ~20 for fine detail)",
+      "reasoning": "AutoEQ convention -- beyond this, diminishing returns vs. added complexity/ringing risk."
+    }
+  ],
+  "data_source_priority_by_category": {
+    "frequency_response_of_a_device": [
+      "User's own measurement of their exact physical unit",
+      "Vetted community measurement database for the exact model",
+      "Manufacturer spec sheet",
+      "Unknown -- assume flat, flag as unverified"
+    ],
+    "target_curve_selection": [
+      "User-supplied custom target",
+      "Harman research target matching device form factor (over-ear 2018 / in-ear 2019)",
+      "Diffuse-field neutral",
+      "Flat electrical response"
+    ],
+    "filter_parameters_Fc_Gain_Q": [
+      "Algorithmic fit against (Target - Measured) within an error tolerance",
+      "Vetted community PEQ preset for the exact device",
+      "Manual user placement guided by this schema's reasoned defaults"
+    ],
+    "sample_rate": [
+      "Live query of the active Windows audio endpoint",
+      "Equalizer APO 'sampleRate' expression constant at runtime",
+      "48000 Hz fallback assumption"
+    ],
+    "channel_layout": [
+      "Live query of the active Windows audio endpoint's channel configuration",
+      "User manual selection",
+      "Stereo fallback assumption"
+    ],
+    "preamp_value": [
+      "Computed from the combined filter response's true peak",
+      "Advanced user manual override",
+      "Flat -6 dB fallback (least reliable, only if computation is impossible)"
+    ]
+  },
+  "listener_slots": {
+    "description": "A per-listener hearing-correction feature (built as a redesign of an earlier parked multi-listener spec) layering an individual's own measured ear asymmetry on top of any loaded device/room-correction profile, without modifying that profile's stored data. Distinct from a 'Profile' -- a Listener Slot stores a person's hearing-test history and derived correction, not an EQ curve of its own.",
+    "slots": "4 fixed, nameable slots (not open-ended) -- a deliberately small, bounded set rather than a full per-user account system.",
+    "data_captured_per_slot": "Per-slot history of hearing-threshold ('Ear Calibration') test runs, each the same per-ear-per-frequency relative-threshold + imbalance data structure the underlying test already produces. A bounded retention policy keeps only the most recent N runs per slot (oldest deleted on overflow) -- a deliberate, documented exception to a general archive-never-delete convention, justified because this is end-user runtime data, not development work product.",
+    "effective_correction_source": "The correction actually applied is derived from the AVERAGE of a slot's saved run history (not just the most recent run), reducing the influence of any single noisy measurement session.",
+    "correction_math": {
+      "principle": "Weak-ear-only, capped boost -- the stronger ear is never cut.",
+      "cap": "+6 dB maximum boost per ear, matching the same boost cap already used elsewhere in the app's auto-correction pipeline (not a separately invented number).",
+      "derivation": "A per-frequency imbalance value (weaker-ear-relative-to-stronger-ear, in dB) is converted into an independent left/right correction curve: whichever ear measured weaker at a given frequency gets boosted (up to the cap) to compensate; the stronger ear is left untouched -- enforced as an invariant of the clamping step itself (a zero cut-floor), not merely an assumption about the input data."
+    },
+    "render_boundary": "Render-time-only composition -- the correction is NEVER written into a profile's stored data. It is composed into a profile only at the moment a config is actually rendered for preview or activation (both of the app's real render choke points), producing a new composed config object rather than mutating the stored one. When no correction is active (flat/no-op, including 'no hearing-test data for this slot'), the composition step is a zero-cost identity pass-through, so behavior is unchanged from before this feature existed.",
+    "interaction_with_headroom": "Composition happens BEFORE the combined-response/headroom (Preamp) calculation runs, on the already-composed channel sections rather than the base ones -- so Preamp/headroom math automatically accounts for the extra correction layer. This is the same 'layer, don't merge into stored data' pattern used by the ISO 226 loudness-compensation layer, and for the same reason: both need to be included in headroom math without ever being silently baked into a saved profile's own filters.",
+    "session_semantics": "The active listener slot resets to a configured default every app launch -- it is a session-scoped choice (like Preamp-Auto-on/off), not a value that silently persists and could surprise a different listener on next use.",
+    "legacy_migration": "Any hearing-test history that existed before this feature shipped is copied (not moved) into the first slot on first run after upgrade, so no prior data is silently lost or duplicated on repeated migrations.",
+    "ideal_source_priority": [
+      "1. This app's own per-ear hearing-threshold test, run and saved into a listener slot",
+      "2. No correction (flat/no-op) if no listener slot is selected or has no saved test data -- this feature never guesses at a hearing profile"
+    ]
+  },
+  "channel_configurations_note": "The table above reflects Equalizer APO's own official, documented channel-configuration table and should be treated as the spec-level reference. A real consumer-facing app's own UI channel-layout presets are commonly a DIFFERENT, deliberately curated list (e.g. adding sub-inclusive shorthand like '2.1'/'4.1' that consumers think in, while omitting entries like bare 'Mono' or APO's specific 4-channel 'Surround' [L,R,C,RC] variant that aren't useful to a typical user) -- see app_ui_channel_presets below for a documented real-world example of this divergence, including a case where a UI shorthand preset has NO corresponding row in Equalizer APO's own official table at all.",
+  "app_ui_channel_presets": {
+    "description": "A real app's curated, consumer-facing channel-layout preset list, kept deliberately different from Equalizer APO's own official channel_configurations table above -- documented here as a concrete example of why the two should not be assumed to be the same list.",
+    "example_preset_list": {
+      "Stereo / Headphones": [
+        "L",
+        "R"
+      ],
+      "Stereo + Sub (2.1)": [
+        "L",
+        "R",
+        "LFE"
+      ],
+      "Surround (4.0)": [
+        "L",
+        "R",
+        "RL",
+        "RR"
+      ],
+      "Surround + Sub (4.1)": [
+        "L",
+        "R",
+        "RL",
+        "RR",
+        "LFE"
+      ],
+      "5.1 Surround": [
+        "L",
+        "R",
+        "C",
+        "LFE",
+        "RL",
+        "RR"
+      ],
+      "7.1 Surround": [
+        "L",
+        "R",
+        "C",
+        "LFE",
+        "RL",
+        "RR",
+        "SL",
+        "SR"
+      ]
+    },
+    "reconciliation_notes": [
+      "'Stereo / Headphones' and '7.1 Surround' match Equalizer APO's official table exactly.",
+      "'Surround (4.0)' uses the same channel mapping as APO's official 'Quadraphonic' entry under a friendlier name -- APO's own config literally named 'Surround' is a DIFFERENT 4-channel layout (L,R,C,RC) that this preset list does not expose at all. Worth noting explicitly so it is never mistaken for a naming bug.",
+      "'5.1 Surround' here uses the RL/RR channel identifiers (matching one of the two official 5.1 variants) rather than the SL/SR variant, kept as the more commonly recognized labeling.",
+      "'Stereo + Sub (2.1)' and 'Surround + Sub (4.1)' have NO corresponding row in Equalizer APO's own official table at all -- on hardware whose reported speaker format Equalizer APO doesn't recognize as one of its named configurations, the LFE channel identifier specifically may not resolve to any real channel, meaning a profile built from either preset could silently produce a no-op LFE filter block. A one-time user-facing warning at layout-selection time is the recommended mitigation (rather than silently switching these presets to raw numeric channel indices, which would break any other feature that pattern-matches the literal channel-name strings, such as per-ear correction logic or standard-channel-order-dependent measurement tooling)."
+    ],
+    "design_rationale": "A curated preset list legitimately diverges from the spec's official table because it should include shorthand real users actually think in (sub-inclusive '2.1'/'4.1' counts) and can omit entries a typical consumer never needs (bare Mono, a 4-channel layout with center + rear-center but no rear-left/right). This divergence is a deliberate product decision, not an error to reconcile away -- but any preset with no official-table equivalent should be flagged to the user rather than silently assumed to work on all hardware."
+  }
+}

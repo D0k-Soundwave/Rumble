@@ -1,0 +1,97 @@
+RUMBLE — END-USER DISCLAIMER AND TERMS OF USE
+=====================================================================
+
+1. NO WARRANTY
+
+This software is provided "AS IS," without warranty of any kind, express
+or implied, including but not limited to the warranties of
+merchantability, fitness for a particular purpose, and non-infringement.
+The developer does not warrant that the software will be error-free,
+uninterrupted, or that any defect will be corrected.
+
+2. LIMITATION OF LIABILITY
+
+To the maximum extent permitted by applicable law, in no event shall the
+developer be liable for any claim, damages, or other liability — whether
+in an action of contract, tort, or otherwise — arising from, out of, or
+in connection with the software or the use or other dealings in the
+software. This includes, without limitation, any direct, indirect,
+incidental, special, consequential, or exemplary damages, loss of data,
+loss of profits, or damage to equipment, even if advised of the
+possibility of such damages. You use this software entirely at your own
+risk.
+
+3. AUDIO OUTPUT AND HEARING SAFETY
+
+This software creates and applies audio equalization (EQ) settings that
+change the loudness and tonal balance of sound played through your
+speakers or headphones. Incorrectly configured EQ settings — including
+manually-entered boosts, imported third-party profiles, or profiles
+combined with other audio enhancement software — can produce output that
+is significantly louder than expected, distorted, or otherwise different
+from what you intend.
+
+Listening to audio at excessive volume, for extended periods, or through
+equipment being driven beyond its safe operating range can cause
+permanent hearing damage and/or damage to speakers, headphones,
+amplifiers, or other connected equipment.
+
+The developer is not responsible for any hearing damage, equipment
+damage, or other harm resulting from the use of this software or any
+profile created, imported, or applied through it. Always test new or
+imported EQ profiles at a low volume before increasing it, and use your
+own judgment about safe listening levels.
+
+Any hearing-related features in this software (including calibration or
+screening tools) are provided for general informational purposes only.
+They are not a medical device, not a clinical or diagnostic test, and
+are not performed on calibrated or certified equipment. They are not a
+substitute for a professional hearing assessment. If you have concerns
+about your hearing, consult a licensed audiologist or physician.
+
+4. SYSTEM CONFIGURATION CHANGES
+
+This software modifies configuration files belonging to Equalizer APO,
+a separate, independently-developed audio processing tool that must
+already be installed on your system for this software to have any
+effect. On first run, this software takes ownership of Equalizer APO's
+main configuration file, saving a backup of your original file; the
+original is restored automatically if this software is uninstalled
+through the standard uninstaller.
+
+If you edit Equalizer APO's configuration files directly, or use other
+software that also modifies them, conflicts may occur that this software
+cannot detect or prevent. If you use any other EQ, "audio enhancement,"
+or driver-level sound processing feature at the same time as this
+software (for example, manufacturer audio-enhancement suites, other
+system-wide EQ tools, or built-in device DSP), the effects will combine
+in ways this software cannot see or account for, which can produce
+unexpectedly loud or distorted output. It is recommended that you
+disable other EQ or audio-enhancement features while using this
+software, or be aware that this software's own gain and headroom
+calculations assume no other processing is being applied.
+
+Equalizer APO itself is a separate open-source project, distributed
+under its own license, and is not covered by this disclaimer or by any
+warranty made by the developer of this software.
+
+5. NO PROFESSIONAL / MEDICAL ADVICE
+
+Nothing in this software constitutes professional audio engineering
+advice, medical advice, or a diagnosis of any kind. Target curves,
+defaults, and recommendations included in this software are based on
+general research and industry conventions; they may not be appropriate
+for your specific equipment, hearing, or listening environment.
+
+6. ACCEPTANCE
+
+By clicking "I accept the agreement" and continuing installation, you
+acknowledge that you have read this disclaimer, understand it, and agree
+to use this software at your own risk, subject to the terms above.
+
+If you do not agree, click "Cancel" to exit the installer without
+installing this software.
+
+---------------------------------------------------------------------
+Published by SoundWave.Team — contact/support: d0k@soundwave.team
+ 
