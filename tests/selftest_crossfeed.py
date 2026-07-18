@@ -265,48 +265,46 @@ def test_channelless_autoeq_convolution_profile_can_take_crossfeed():
 
 # ── ProfileManager wiring ────────────────────────────────────────────────
 
-def test_disabled_by_default_render_is_byte_identical():
+def test_no_spec_render_is_byte_identical():
+    # Per-profile crossfeed: a profile with no CrossfeedSpec renders exactly
+    # as it would with no crossfeed layer at all.
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        assert mgr.settings["crossfeed_enabled"] is False
         config = _stereo_config()
         without = apo_config.render_config_body(mgr._apply_render_layers(config))
-        body = mgr._render_layered_body(config)
+        body = mgr._render_layered_body(config, None)
         assert body == without
 
 
-def test_enabled_stereo_config_carries_the_block():
+def test_spec_stereo_config_carries_the_block():
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
-        mgr.settings["crossfeed_preset"] = "chumoy"
-        mgr.settings["crossfeed_strength"] = 100
-        body = mgr._render_layered_body(_stereo_config())
+        spec = crossfeed.CrossfeedSpec(preset="chumoy", strength=100)
+        body = mgr._render_layered_body(_stereo_config(), spec)
         assert "Channel: XL XR" in body
         assert "Copy: XL=R" in body
         assert "Copy: L=L+XL R=R+XR" in body
 
 
-def test_enabled_zero_strength_carries_no_block():
+def test_spec_zero_strength_carries_no_block():
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
-        mgr.settings["crossfeed_strength"] = 0
+        spec = crossfeed.CrossfeedSpec(preset="chumoy", strength=0)
         config = _stereo_config()
         without = apo_config.render_config_body(mgr._apply_render_layers(config))
-        assert mgr._render_layered_body(config) == without
+        assert mgr._render_layered_body(config, spec) == without
 
 
 def test_layout_without_a_stereo_pair_silently_skips():
     # The genuine no-op: no L/R anywhere, so there is nothing to crossfeed.
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
+        spec = crossfeed.CrossfeedSpec(preset="chumoy")
         config = ProfileConfig(preamp=0.0, channel_sections=[
             ChannelSection(channel="C"), ChannelSection(channel="LFE"),
         ])
         without = apo_config.render_config_body(mgr._apply_render_layers(config))
-        assert mgr._render_layered_body(config) == without
+        assert mgr._render_layered_body(config, spec) == without
 
 
 def test_multichannel_layout_with_l_and_r_carries_the_block():
@@ -315,12 +313,12 @@ def test_multichannel_layout_with_l_and_r_carries_the_block():
     # withhold it (deliberate widening, 2026-07-13).
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
+        spec = crossfeed.CrossfeedSpec(preset="chumoy")
         config = ProfileConfig(preamp=0.0, channel_sections=[
             ChannelSection(channel="L"), ChannelSection(channel="C"),
             ChannelSection(channel="R"), ChannelSection(channel="LFE"),
         ])
-        body = mgr._render_layered_body(config)
+        body = mgr._render_layered_body(config, spec)
         assert "Channel: XL XR" in body
         assert "Copy: L=L+XL R=R+XR" in body
 
@@ -331,10 +329,10 @@ def test_channelless_profile_carries_the_block():
     # was silently skipped before 2026-07-13.
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
+        spec = crossfeed.CrossfeedSpec(preset="chumoy")
         config = ProfileConfig(preamp=0.0, channel_sections=[],
                                convolution="irs/headphone_48000.wav")
-        body = mgr._render_layered_body(config)
+        body = mgr._render_layered_body(config, spec)
         assert "Channel: XL XR" in body
         assert "Copy: XL=R" in body
         assert "Copy: L=L+XL R=R+XR" in body
@@ -342,29 +340,49 @@ def test_channelless_profile_carries_the_block():
         assert "Convolution: irs/headphone_48000.wav" in body
 
 
-def test_custom_mode_ignores_leftover_zero_strength():
-    # crossfeed_strength is irrelevant to "custom" -- it must still render
-    # even if a leftover 0 from a previously-selected named preset is saved
-    # (the Strength slider is hidden, not reset, when Custom is selected).
+def test_custom_spec_ignores_leftover_zero_strength():
+    # strength is irrelevant to "custom" -- it must still render even at 0.
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
-        mgr.settings["crossfeed_preset"] = "custom"
-        mgr.settings["crossfeed_strength"] = 0
-        mgr.settings["crossfeed_custom_gain_db"] = -8.0
-        body = mgr._render_layered_body(_stereo_config())
+        spec = crossfeed.CrossfeedSpec(preset="custom", strength=0, custom_gain_db=-8.0)
+        body = mgr._render_layered_body(_stereo_config(), spec)
         assert "Channel: XL XR" in body
 
 
 def test_preview_config_carries_the_block():
     with tempfile.TemporaryDirectory() as tmp:
         mgr = _manager(tmp)
-        mgr.settings["crossfeed_enabled"] = True
-        mgr.settings["crossfeed_preset"] = "linkwitz"
-        assert mgr.preview_config(_stereo_config()) is True
+        spec = crossfeed.CrossfeedSpec(preset="linkwitz")
+        assert mgr.preview_config(_stereo_config(), spec) is True
         text = (mgr.rumble_dir / PREVIEW_FILENAME).read_text(encoding="utf-8")
         assert "Channel: XL XR" in text
         assert "Delay: 0.3 ms" in text
+
+
+def test_per_profile_crossfeed_round_trips_and_activates():
+    # End-to-end: a profile's own crossfeed persists to its file, reloads
+    # from disk, and its block reaches the active render -- and switches off
+    # when the active profile has none.
+    with tempfile.TemporaryDirectory() as tmp:
+        mgr = _manager(tmp)
+        cfg = _stereo_config()
+        plain = mgr.create_profile("Plain", config=cfg)
+        spatial = mgr.create_profile("Spatial", config=cfg)
+        spatial.crossfeed = crossfeed.CrossfeedSpec(preset="meier", strength=90)
+        mgr._write_profile_file(spatial, cfg)
+
+        reloaded = _manager(tmp)
+        rs = reloaded.get_profile(spatial.id)
+        assert rs.crossfeed == crossfeed.CrossfeedSpec(preset="meier", strength=90)
+
+        reloaded.activate_profile(spatial.id)
+        active = (reloaded.rumble_dir / "rumble_listener_active.txt").read_text(encoding="utf-8")
+        assert "Channel: XL XR" in active and "Copy: L=L+XL R=R+XR" in active
+
+        # Switching to a profile with no crossfeed drops the block.
+        reloaded.activate_profile(plain.id)
+        pointer = (reloaded.config_path / "rumble_active.txt").read_text(encoding="utf-8")
+        assert "XL" not in pointer  # plain single-Include, no composed block
 
 
 if __name__ == "__main__":

@@ -578,6 +578,11 @@ class ProfileMeta:
     # re-solve when the device rate changes (refresh_fits_for_sample_rate); its
     # absence marks the layer as the user's own tuning, never to be rewritten.
     fit_sample_rate: int | None = None
+    # This profile's own headphone crossfeed selection (Rumble: per-profile
+    # crossfeed). None ⇒ no crossfeed for this profile. The render layer applies
+    # the active/previewed profile's spec, so crossfeed switches with the
+    # profile -- unlike the other render layers, which stay machine-level.
+    crossfeed: "crossfeed.CrossfeedSpec | None" = None
 
     @property
     def protected(self) -> bool:
@@ -847,6 +852,7 @@ class ProfileManager:
             apo_source_hash=doc.apo_source_hash,
             import_signature=doc.import_signature,
             fit_sample_rate=doc.fit_sample_rate,
+            crossfeed=doc.crossfeed,
         )
 
         # Legacy (old 3-line header) and foreign (header-less) files are
@@ -903,6 +909,7 @@ class ProfileManager:
             apo_source_hash=meta.apo_source_hash,
             import_signature=meta.import_signature,
             fit_sample_rate=meta.fit_sample_rate,
+            crossfeed=meta.crossfeed,
             config=config if config is not None else ProfileConfig(),
         )
 
@@ -1923,58 +1930,35 @@ class ProfileManager:
 
     # ── B2 headphone crossfeed ────────────────────────────────────────
 
-    def _crossfeed_active(self) -> bool:
-        """Settings-level "could this layer produce anything" check -- same
-        cheap category as the other layers' settings.get() gates, deciding
-        _write_active_pointer()'s canonical-Include vs composed-scratch fork
-        without needing a loaded ProfileConfig yet (that only happens
-        inside the composed branch). Whether it actually DOES produce a
-        block for a given config additionally depends on that config's
-        channel layout -- see _render_crossfeed_block().
-
-        The "could produce a block" scalar to check depends on the selected
-        mode: only named PRESETS entries scale off the overall
-        crossfeed_strength. "custom" is settings-driven
-        (crossfeed.render_block()'s own dispatch) and strength-independent --
-        checking crossfeed_strength for it would leave crossfeed silently
-        inert whenever a leftover strength value from a previously-selected
-        named preset (the Strength slider is hidden, not reset, for Custom)
-        happened to still be saved as 0."""
-        if not bool(self.settings.get("crossfeed_enabled")):
-            return False
-        mode = self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)
-        if mode == "custom":
-            return True
-        return float(self.settings.get("crossfeed_strength", 0)) > 0.0
-
-    def _render_crossfeed_block(self, config: "apo_config.ProfileConfig") -> str:
+    def _render_crossfeed_block(self, config: "apo_config.ProfileConfig",
+                                spec: "crossfeed.CrossfeedSpec | None") -> str:
         """The one place render-time headphone crossfeed happens. Unlike
         every other layer above, this is not composed into the
         ProfileConfig itself -- it is raw text appended after the rest of
         the rendered body (crossfeed.py's module docstring; KB §17.4).
-        Render-only, storage never mutated. Returns "" (nothing to append)
-        when the setting is off, strength is 0, or *config*'s channel
-        sections aren't a plain stereo layout -- silently skipped, like
-        every other layer's flat/no-op case."""
-        if not self._crossfeed_active():
+        Render-only, storage never mutated. *spec* is the specific profile's
+        own crossfeed selection (per-profile, not a machine setting). Returns
+        "" when *spec* is None/inert, or *config*'s channel sections aren't a
+        plain stereo layout -- silently skipped, like every other layer's
+        flat/no-op case."""
+        if spec is None or not spec.is_active():
             return ""
         if not crossfeed.can_crossfeed(config.channel_sections):
             return ""
-        return crossfeed.render_block(
-            self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET),
-            float(self.settings.get("crossfeed_strength", 100)),
-            self.settings)
+        return crossfeed.render_spec(spec)
 
-    def _render_layered_body(self, config: "apo_config.ProfileConfig") -> str:
+    def _render_layered_body(self, config: "apo_config.ProfileConfig",
+                             crossfeed_spec: "crossfeed.CrossfeedSpec | None" = None) -> str:
         """Composes every ProfileConfig-level render layer
         (_apply_render_layers()) and renders it to text, then appends the
         crossfeed block (if any) after that text -- the one place both
         halves of "the fully rendered active/preview body" come together.
         Shared by preview_config() and _write_active_pointer() so both
-        reflect the same stack."""
+        reflect the same stack. *crossfeed_spec* is the profile being
+        rendered's own crossfeed (per-profile); None ⇒ no crossfeed."""
         composed = self._apply_render_layers(config)
         body = apo_config.render_config_body(composed)
-        crossfeed_block = self._render_crossfeed_block(composed)
+        crossfeed_block = self._render_crossfeed_block(composed, crossfeed_spec)
         if crossfeed_block:
             body = body.rstrip("\n") + "\n\n" + crossfeed_block
         return body
@@ -1987,15 +1971,19 @@ class ProfileManager:
     # the global-fallback `Device: all` block. That ordering is what the
     # code below already does; do not reorder it.
 
-    def _any_render_layer_active(self) -> bool:
-        """Settings-level "could any render layer produce something" check,
-        shared by the single-profile fast path and every dispatch branch --
-        same boolean _write_active_pointer() used inline before D1a."""
+    def _any_render_layer_active(self, meta: "ProfileMeta | None" = None) -> bool:
+        """"Could any render layer produce something" check, shared by the
+        single-profile fast path and every dispatch branch. The machine-level
+        layers (correction, trim, ISO 226 loudness, loudness matching) are the
+        same for every branch; crossfeed is per-profile, so pass the branch's
+        *meta* to test its own crossfeed (defaults to the active profile)."""
+        cf = (meta.crossfeed if meta is not None
+              else (self.get_active_profile().crossfeed if self.get_active_profile() else None))
         return (not self.get_active_correction().is_flat
                 or any(self.session_trim.values())
                 or not self.get_active_loudness_correction().is_flat
                 or bool(self.settings.get("profile_loudness_matching"))
-                or self._crossfeed_active())
+                or (cf is not None and cf.is_active()))
 
     def _device_scratch_filename(self, guid: str) -> str:
         """rumble_device_<8-char-guid-hash>.txt -- a stable, filesystem-safe
@@ -2070,7 +2058,7 @@ class ProfileManager:
         branch goes through this one path so render layers (listener
         correction, trim, ISO 226 loudness, loudness matching, crossfeed)
         compose identically regardless of which branch a device lands in."""
-        if not self._any_render_layer_active():
+        if not self._any_render_layer_active(meta):
             return meta.file
         config = self.load_profile_config(meta.id)
         if config is None:
@@ -2080,7 +2068,8 @@ class ProfileManager:
                    else "# RUMBLE per-device scratch file — temporary, safe to delete\n\n")
         scratch_path = self.rumble_dir / scratch_filename
         self.rumble_dir.mkdir(parents=True, exist_ok=True)
-        scratch_path.write_text(header + self._render_layered_body(config), encoding="utf-8")
+        scratch_path.write_text(header + self._render_layered_body(config, meta.crossfeed),
+                                encoding="utf-8")
         return f"{RUMBLE_SUBDIR}/{scratch_filename}"
 
     def _cleanup_stale_device_scratch(self, active_names: set[str]) -> None:
@@ -2163,8 +2152,16 @@ class ProfileManager:
         itself unchanged (identity, not a copy) when crossfeed is off, at
         zero strength, or the layout isn't stereo-only -- nothing meaningful
         to insert, so the caller can tell "nothing happened" from an
-        `is` check."""
-        if not self._crossfeed_active():
+        `is` check.
+
+        (Legacy escape hatch from the machine-level-crossfeed era; superseded
+        by per-profile crossfeed metadata and removed with the settings-dialog
+        UI rework. Reads the old global settings directly here so it stays
+        self-contained until then.)"""
+        mode = self.settings.get("crossfeed_preset", crossfeed.DEFAULT_PRESET)
+        active = bool(self.settings.get("crossfeed_enabled")) and (
+            mode == "custom" or float(self.settings.get("crossfeed_strength", 0)) > 0.0)
+        if not active:
             return config
         if not crossfeed.can_crossfeed(config.channel_sections):
             return config
@@ -2266,10 +2263,13 @@ class ProfileManager:
     def is_previewing(self) -> bool:
         return self._previewing
 
-    def preview_config(self, config: ProfileConfig) -> bool:
+    def preview_config(self, config: ProfileConfig,
+                       crossfeed_spec: "crossfeed.CrossfeedSpec | None" = None) -> bool:
         """Make Equalizer APO play *config* (typically unsaved editor state)
         immediately: write it to a scratch file in the rumble dir and point the
-        active include at it. Nothing saved is touched — any canonical pointer
+        active include at it. *crossfeed_spec* is the edited profile's own
+        crossfeed (per-profile), so a live crossfeed change previews too.
+        Nothing saved is touched — any canonical pointer
         write (activate, bypass, save) supersedes the preview. The active
         Listener Slot's correction and the ISO 226 loudness layer (if
         active) are composed in first, and the crossfeed block (if enabled
@@ -2282,7 +2282,7 @@ class ProfileManager:
         self._preview_seq += 1
         text = (f"# RUMBLE live preview — temporary scratch file, safe to delete "
                 f"(seq {self._preview_seq})\n\n"
-                + self._render_layered_body(config))
+                + self._render_layered_body(config, crossfeed_spec))
         try:
             self.rumble_dir.mkdir(parents=True, exist_ok=True)
             preview_path.write_text(text, encoding="utf-8")
