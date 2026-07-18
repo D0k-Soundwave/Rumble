@@ -64,13 +64,12 @@ Ordering is general→specific and correction-basis→taste, so each answer maxi
 ## 2. RESEARCH THE GEAR (you, not the user)
 Establish the model's known FR deviations. Priority:
 1. **User measurement** ⇒ `correction = target − measured`; provenance `room-measured`(speakers)/`measured`(rig); status final.
-2. **Published data online** ⇒ map known peaks/dips to filters; `measured` if a real curve exists, else `inferred`.
-   - **Headphones/IEMs: AutoEq is the first stop.** `autoeq.app` (web app); `jaakkopasanen/AutoEq` GitHub = measurement/profile DB from oratory1990, Crinacle, Rtings, Innerfidelity. Output is APO syntax; AutoEq optimises at 48 kHz, so its realised response is exact at Fs=48000 and very close at 44100 — at 88.2/96 kHz and above re-check any filter with Fc above ~8 kHz against §4 at the actual rate (bilinear warping moves the realised curve near Nyquist).
-     - Look up the exact model+variant.
-     - Use its filters as a correction-layer start toward AutoEq's Harman target, then re-layer: apply chosen target/character, add clamped preference + medical, consolidate, **recompute preamp yourself** (§4.5). Don't keep AutoEq's preamp (its GitHub profiles cap +6 dB and split filter sets).
-     - Adapt, don't copy. Provenance `measured`, AutoEq source in `note=`.
-     - Cross-check: oratory1990, Squiglink, reviewer consensus.
-     - **AutoEq = headphones/IEMs only** (no speakers/rooms). Speakers ⇒ §11 or provisional.
+2. **Published data online** ⇒ map known peaks/dips to filters; `measured` if a real curve exists, else `inferred`. Use the SAME databases RUMBLE imports from, the same way — then the values reconcile with what the app itself would produce for this device.
+   - **Headphones/IEMs — AutoEq is the first stop.** `autoeq.app`; `jaakkopasanen/AutoEq` GitHub = correction DB from oratory1990, Crinacle, Rtings, Innerfidelity (each `<Device> ParametricEQ.txt` is already APO syntax). AutoEq optimises at 48 kHz, so its realised response is exact at Fs=48000 and very close at 44100 — at 88.2/96 kHz and above re-check any filter with Fc above ~8 kHz against §4 at the actual rate.
+     - Look up the exact model+variant. Use its filters as a correction-layer start toward its target, then re-layer: apply chosen target/character, add clamped preference + medical, consolidate, **recompute preamp yourself** (§4.5) — don't keep AutoEq's preamp.
+     - **Several measurements of one model ⇒ average them** on the shared/union grid (§4.4 log-linear interp), weighting a more-trusted source higher — the same quality-weighted average RUMBLE's merge does; never just pick one. Adapt, don't copy. Provenance `measured`, source in `note=`.
+   - **Speakers — Spinorama is the first stop** (the same role AutoEq plays for headphones, and the exact source RUMBLE's speaker import uses). `spinorama.org` aggregates anechoic Klippel-NFS measurements (Audio Science Review, Erin's Audio Corner, …). Take the **Listening Window** curve and build the correction per §3 — it is a raw normalised response, NOT a finished correction like AutoEq's, so you subtract it from the tilt/target yourself. Several measurements ⇒ average as above (weight higher-quality ones). Provenance `measured`, still `status=provisional` until the user measures their own room (the room dominates a speaker in-room, §12).
+   - Cross-check against reviewer consensus (oratory1990, Squiglink for headphones; the measurement's own review notes for speakers).
 3. **Nothing found** ⇒ build from stated preferences; say so in the summary.
 
 Rules:
@@ -92,13 +91,14 @@ total(f)      = correction + preference               (dB add)
 medical caps  = hard min/max on total, imposed LAST, always win
 → realise as filters → consolidate (§5) → preamp from combined curve incl GEQ (§4.5)
 ```
-**Targets:**
-- **Over-ear:** Harman-style = DF baseline + bass shelf (~+4–6 dB LSC ~105 Hz) + gentle treble downslope >3 kHz. Known-deviations-only ⇒ correction = inverse of deviations.
-- **IEM:** as above, bigger bass shelf (~+8–10 dB ~120 Hz), ear-gain ~2.5–3 kHz; ~8 kHz coupler peak is a rig artifact — don't blindly cut (§12).
-- **Speakers in-room:** downward tilt ~−1 dB/oct (pivot 1 kHz; range −0.8…−1.5). Never flat-at-seat (bright).
-- **Mixing/critical:** preference=0; target flat for HP/IEM, in-room tilt for speakers (flat-at-seat is bright even for mixing).
+**Targets** (the exact set RUMBLE uses — prefer the real published curve over an approximation; record which in `# target_curve:`):
+- **Over-ear ⇒ Harman over-ear 2018** (Olive/Welti/Khonsaripour, AES 2018 — RUMBLE's default for over-ears). Can't fetch the curve? Approximate: diffuse-field baseline + bass shelf (~+4–6 dB LSC ~105 Hz) + gentle treble downslope >3 kHz. Known-deviations-only ⇒ correction = inverse of deviations.
+- **IEM/earbud ⇒ Harman in-ear 2019** (RUMBLE's default for in-ears). Approx: bigger bass shelf (~+8–10 dB ~120 Hz), ear-gain ~2.5–3 kHz; ~8 kHz coupler peak is a rig artifact — don't blindly cut (§12).
+- **Diffuse-field (5128 rig)** is the neutral alternative for any headphone class when the user asks for it (§1 named target). **Free-field: never — there is no complete published free-field dataset, so RUMBLE deliberately omits it; do not invent one.**
+- **Speakers (Spinorama Listening Window, §2):** default **flat tilt (0 dB/oct)** — the honest anechoic starting point for a user who will then measure their room with REW; for a user who won't, a mild **~−0.9 dB/oct** in-room preference tilt, pivot 1 kHz. (Those two are RUMBLE's own speaker defaults — match them; don't use a steeper slope that reads bright.)
+- **Mixing/critical:** preference=0; target = the class's named neutral target for HP/IEM, the in-room tilt for speakers.
 - **Fidelity intent (§1 rule):** preference=0, identical machinery to mixing/critical but with the class's normal neutral target — the correction layer alone is what puts voices and instruments back where the engineer placed them on THIS gear; adding taste on top would move them again.
-- Warmer/brighter requests shift the tilt before taste. Record in `# target_curve:`. Parametric targets approximate research; importing a real target overrides.
+- Warmer/brighter requests shift the tilt before taste. Record in `# target_curve:`. A parametric approximation is a fallback; the real fetched curve (or a target the user names, §1) overrides it.
 
 **Mode:** parametric only — real Fc/Q on real deviations (≤32/section). No fixed grids, no fixed Q, no smoothing. The output is a RUMBLE profile; there is no export path for other EQ apps or band-limited hardware.
 
@@ -175,8 +175,9 @@ BW_oct = (2/ln 2) * asinh( 1/(2*Q) )        Q = sqrt(2^BW) / (2^BW - 1)
 ```
 **4.7 GraphicEQ residual** (only for the rate-robust realisation, §3 — needs a stamped `# Fit Sample Rate:`):
 ```
-residual(f) = target_correction(f) − realised_bands(f)   # on the GraphicEQ grid, evaluated at the stamped Fs
+residual(f) = target_correction(f) − realised_bands(f)   # evaluated at the stamped Fs
 ```
+Grid = RUMBLE's own GraphicEQ grid: **1/12-octave from 20 Hz to 20 kHz (~120 points), log-linear interpolation (§4.4)** — the same grid every RUMBLE correction/GEQ uses, so a residual (and any freeform/tone contour, §6) reconciles point-for-point with what the app would compute.
 Write `residual(f)` as the GraphicEQ line (in place of flat) and stamp `# Fit Sample Rate: <Fs>`. Keep it gentle: if the residual exceeds a few dB anywhere, add or adjust a band so the bands carry the bulk and the residual only cleans up. Preamp (§4.5) is computed from the combined bands+residual curve exactly as always. A band and the residual must never both cover the same deviation (no double-correction, §6).
 
 ## 5. CONSOLIDATION
@@ -278,6 +279,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 ## 9. VALIDATION (all pass before output)
 - [ ] Parametric output only — no fixed-band/grid rendering, no other-EQ export.
 - [ ] Target stated; correction = target − (measured | known deviations).
+- [ ] Data source is the one RUMBLE uses (AutoEq for HP/IEM, Spinorama Listening Window for speakers); several measurements averaged (quality-weighted), not cherry-picked; target = RUMBLE's named target for the class (Harman OE 2018 / IE 2019 / Diffuse-field 5128; speakers flat-or-−0.9 tilt); no invented free-field.
 - [ ] Layers in order; preference clamped to its strength tier of the recorded preference envelope; medical last as caps.
 - [ ] Preference envelope researched (§2) and recorded in `# preference_envelope:` with tier and basis; no taste move past the documented edge (a wish beyond it is restated as a target change in `# target_curve:`).
 - [ ] Every taste move meets the ~2 dB audibility floor (§3) — sub-audible moves omitted, never scaled down.
@@ -306,7 +308,7 @@ Delay: 0 ms                              # only present when a Delay is used abo
 
 ## 10. FLOW (skeleton)
 1. Interview (in checklist order, §1) → gear, pads/port, speaker distance, subwoofer?, source, DAC/amp+mode, measurement?, IR file?, sample rate?, channels, balance?, use, genres, then the taste layer together (character/fidelity, F1/F3/F4/F6, strength), then medical, volume, tone-control?, headphone spatial-fatigue?. Every added item is skippable to a value-neutral default; harvest (§0) skips any already implied.
-2. Research (HP/IEM → AutoEq first) → deviations w/ provenance + the headroom and preference envelopes (§2); flat device ⇒ none; nothing found ⇒ prefs + say so.
+2. Research the same DBs RUMBLE uses (§2): HP/IEM → AutoEq; speakers → Spinorama Listening Window. Average several measurements, don't cherry-pick. → deviations w/ provenance + the headroom and preference envelopes; flat device ⇒ none; nothing found ⇒ prefs + say so.
 3. Target per class + character.
 4. correction (inverse deviations, or fit measurement §11) + clamped preference = total.
 5. Medical caps last; cap total boost to the headroom envelope (§7).
@@ -316,19 +318,20 @@ Delay: 0 ms                              # only present when a Delay is used abo
 
 **Loading (RUMBLE):** import the file in RUMBLE (Import in the app, or drop the `.txt` into the profile library) and activate it — RUMBLE manages Equalizer APO's config itself; never hand-edit APO's `config` folder alongside it. Keep the Preamp line. Only one EQ stage active — source "enhancements", amp tone/loudness and onboard EQ all off. RUMBLE's own optional render layers (Loudness, tone trim, crossfeed, listener correction) compose on top of this profile at render time by design — that is fine and not a second EQ stage.
 
-## 11. MEASUREMENT → FILTERS (only if a measurement is supplied)
-Fit correction to the measurement (provenance room-measured/measured; status final).
+## 11. FITTING AN ANECHOIC OR MEASURED CURVE → FILTERS
+Applies to a user measurement (REW etc.) AND to a fetched Spinorama Listening Window (§2) — both are raw curves you correct toward a target the same way. A user's own in-room measurement ⇒ `status=final`; a Spinorama anechoic curve ⇒ `status=provisional` (the room still dominates until they measure it).
 1. Parse freq+magnitude(+phase); any delimiter; sort. Stereo: per-channel or L/R average.
-2. Smooth: ~1/6–1/3 oct (headphones); variable/psychoacoustic, coarser in bass (speakers). Never fit raw wiggles.
-3. `error(f)=target − measured_smoothed`.
+2. Smooth the SAME way RUMBLE does — ~1/3 oct flat, or its adaptive convention: fine (~1/12 oct) through bass and mids up to ~6 kHz, widening to ~2 oct above 8 kHz (AutoEq's treble convention, so treble artifacts aren't chased). Never fit raw wiggles.
+3. `error(f) = target − smoothed_measured`, on the 1/12-oct 20 Hz–20 kHz grid (§4.7); target per §3.
 4. Speakers — Schroeder `Fs≈2000·√(RT60/V)` (s, m³; unknown ⇒ ~150–400 Hz): below Fs cut modal peaks only, never boost nulls; above Fs broad correction ok.
-5. Greedy fit: largest |error| ⇒ place filter (Fc=centre, gain=error there, Q=width; PK, or LSC/HSC for band-edge tilts) ⇒ subtract its modelled response (§4, at the recorded Fs) ⇒ repeat until residual <~1 dB or a filter ceiling. Respect §7.
-6. Consolidate (§5); recompute preamp (§4.5).
+5. Band-limit + cap like RUMBLE's own correction: soft-taper the correction to 0 outside ~20 Hz–16 kHz (never boost below the speaker's −6 dB roll-off point, nor chase an ultrasonic rise); boost bound by the §7 headroom envelope (RUMBLE's default auto-cap is +6 dB), cut floored near −12 dB (deeper is a null — flag, §7).
+6. Greedy fit: largest |error| ⇒ place filter (Fc=centre, gain=error there, Q=width; PK, or LSC/HSC for band-edge tilts) ⇒ subtract its modelled response (§4, at the recorded Fs) ⇒ repeat until residual <~1 dB or a filter ceiling.
+7. Consolidate (§5); recompute preamp (§4.5).
 
 ## 12. PER-CLASS
 **IEM:** IEM target (§3); ~8 kHz coupler peak = rig artifact, don't cut unless the user reports sharpness; insertion depth/tip shifts treble — valid only for the fit used; no room.
 **Over-ear:** correction tied to pad/seal — a pad swap/broken seal changes it; lock to the pad variant. DF baseline depends on the rig — keep target rig-compatible, else prefer inverse-of-known-deviations.
-**Speakers/rooms:** placement first (toe-in, tweeter at ear height, wall distance), then measure at the seat, then EQ. Missing sub-bass ⇒ add a subwoofer (~60–80 Hz), not over-boost; level-match; multiple subs smooth modes. **Sub/mains routing, crossovers and distance delays: use RUMBLE's bass-management tool (Tools menu) — it generates the crossover filters, summed sub feed and per-channel delays as reviewable profile content; don't hand-build routing in this profile.** The delay tool here (§6) covers plain L/R seat asymmetry only. Active/DSP speakers may self-correct — don't double-correct.
+**Speakers/rooms:** placement first (toe-in, tweeter at ear height, wall distance), then measure at the seat, then EQ (the anechoic starting curve is Spinorama's Listening Window, §2; the accurate room correction still needs the at-seat measurement). Missing sub-bass ⇒ add a subwoofer (~60–80 Hz), not over-boost; level-match; multiple subs smooth modes. **Sub/mains routing, crossovers and distance delays: use RUMBLE's bass-management tool (Tools menu) — it generates the crossover filters, summed sub feed and per-channel delays as reviewable profile content; don't hand-build routing in this profile.** The delay tool here (§6) covers plain L/R seat asymmetry only. Active/DSP speakers may self-correct — don't double-correct.
 **Headphones/IEM spatial fatigue:** if hard-panned stereo feels in-head or unnaturally split, that is a soundstage issue EQ doesn't fix — recommend RUMBLE's Crossfeed feature (a render layer of cited crossfeed circuits), never build it into the profile.
 **All:** exactly one EQ stage — source "enhancements", amp tone/loudness, onboard EQ all off (RUMBLE's own render layers excepted, §10).
 
