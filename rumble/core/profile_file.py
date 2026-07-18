@@ -30,8 +30,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from rumble.core import apo_config
+from rumble.core import apo_config, crossfeed
 from rumble.core.apo_config import ProfileConfig
+from rumble.core.crossfeed import CrossfeedSpec
 
 ATTRIBUTION_LINE = "# Created by RUMBLE — EQ Profile Manager for Equalizer APO"
 
@@ -41,7 +42,8 @@ REQUIRED_HEADER_KEYS = ("name", "description", "tags", "created", "modified")
 
 _HEADER_KEY_RE = re.compile(
     r"^#\s*(RUMBLE\s+Profile|Description|Tags|Created|Modified|Readonly|Builtin"
-    r"|APO\s+Source\s+Hash|APO\s+Source|Import\s+Signature|Fit\s+Sample\s+Rate)\s*:\s*(.*)$",
+    r"|APO\s+Source\s+Hash|APO\s+Source|Import\s+Signature|Fit\s+Sample\s+Rate"
+    r"|Crossfeed)\s*:\s*(.*)$",
     re.IGNORECASE,
 )
 _ATTRIBUTION_RE = re.compile(r"^#\s*Created by RUMBLE\b", re.IGNORECASE)
@@ -60,6 +62,8 @@ _KEY_TO_FIELD = {
     "import signature": "import_signature",
     # Sample rate a curve-fitted profile's bands/residual were solved at:
     "fit sample rate": "fit_sample_rate",
+    # Per-profile crossfeed selection (applied by the render layer):
+    "crossfeed": "crossfeed",
 }
 
 _LEGACY_DATETIME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$")
@@ -95,6 +99,11 @@ class ProfileDocument:
     # which is what keeps their GraphicEQ layer (a deliberate part of the tuning,
     # not a residual) from ever being rewritten.
     fit_sample_rate: int | None = None
+    # Per-profile headphone crossfeed selection, parsed from the
+    # `# Crossfeed: preset=<key> strength=<n>` header line (the same line the
+    # AI profile-generator prompts emit). None ⇒ no crossfeed for this profile;
+    # the render layer applies the active/previewed profile's spec.
+    crossfeed: CrossfeedSpec | None = None
     config: ProfileConfig = field(default_factory=ProfileConfig)
 
     # Header keys actually found while parsing (field names).
@@ -152,6 +161,8 @@ def parse_profile_text(text: str) -> ProfileDocument:
                 doc.fit_sample_rate = int(value)
             except ValueError:
                 doc.fit_sample_rate = None
+        elif fieldname == "crossfeed":
+            doc.crossfeed = crossfeed.parse_spec(value)
         doc.found_keys.add(fieldname)
 
     doc.config = apo_config.parse_config(text)
@@ -178,6 +189,8 @@ def _header_lines(doc: ProfileDocument) -> list[str]:
         lines.append(f"# Import Signature: {doc.import_signature}")
     if doc.fit_sample_rate:
         lines.append(f"# Fit Sample Rate: {doc.fit_sample_rate}")
+    if doc.crossfeed is not None:
+        lines.append(f"# Crossfeed: {crossfeed.format_spec(doc.crossfeed)}")
     lines.append(ATTRIBUTION_LINE)
     return lines
 

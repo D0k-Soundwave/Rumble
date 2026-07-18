@@ -212,3 +212,88 @@ def render_block(mode: str, strength: float, settings: Mapping[str, object]) -> 
         # second scalar on top that would just be confusing.
         return _render_gain_filter_delay_block(spec, 100.0)
     return render_crossfeed_block(mode, strength)
+
+
+# ── per-profile crossfeed spec ────────────────────────────────────────────
+#
+# Crossfeed is a property of the profile, not a machine-wide setting: a
+# profile carries its own selection in its file header
+# (`# Crossfeed: preset=<key> strength=<n>`), and the render layer applies the
+# active/previewed profile's spec. Absent header ⇒ no crossfeed for that
+# profile. The AI profile-generator prompts emit exactly this line.
+
+#: Every selectable mode: the named cited circuits plus the user "custom".
+PRESET_KEYS: tuple[str, ...] = tuple(PRESETS.keys()) + ("custom",)
+
+
+@dataclass(frozen=True)
+class CrossfeedSpec:
+    """One profile's crossfeed selection. `preset` is a `PRESETS` key or
+    "custom"; `strength` (0-100) scales a named preset's cross-feed level;
+    the `custom_*` fields are used only when `preset == "custom"`."""
+    preset: str = DEFAULT_PRESET
+    strength: float = 100.0
+    custom_gain_db: float = -6.0
+    custom_freq_hz: float = 700.0
+    custom_delay_us: float = 300.0
+
+    def is_active(self) -> bool:
+        """True when this spec would actually produce a block: a named preset
+        needs strength > 0; custom always renders its own figures."""
+        if self.preset == "custom":
+            return True
+        return self.preset in PRESETS and self.strength > 0.0
+
+
+def render_spec(spec: CrossfeedSpec) -> str:
+    """Render one profile's spec to APO text, or '' when it is inert."""
+    if not spec.is_active():
+        return ""
+    if spec.preset == "custom":
+        preset = CrossfeedPreset("Custom", spec.custom_gain_db,
+                                 spec.custom_freq_hz, spec.custom_delay_us)
+        return _render_gain_filter_delay_block(preset, 100.0)
+    return render_crossfeed_block(spec.preset, spec.strength)
+
+
+def format_spec(spec: CrossfeedSpec) -> str:
+    """Serialise a spec to the `# Crossfeed:` header payload."""
+    parts = [f"preset={spec.preset}", f"strength={int(round(spec.strength))}"]
+    if spec.preset == "custom":
+        parts += [f"gain={spec.custom_gain_db:g}",
+                  f"freq={spec.custom_freq_hz:g}",
+                  f"delay={spec.custom_delay_us:g}"]
+    return " ".join(parts)
+
+
+def parse_spec(payload: str) -> "CrossfeedSpec | None":
+    """Parse a `# Crossfeed:` header payload into a spec, or None if it names
+    no valid preset. Tolerant of `key=value` tokens in any order and of a
+    bare preset word (`meier`) as well as `preset=meier`."""
+    if not payload:
+        return None
+    kv: dict[str, str] = {}
+    bare_preset: str | None = None
+    for tok in payload.replace(",", " ").split():
+        if "=" in tok:
+            k, _, v = tok.partition("=")
+            kv[k.strip().lower()] = v.strip()
+        elif tok.lower() in PRESET_KEYS:
+            bare_preset = tok.lower()
+    preset = (kv.get("preset") or bare_preset or "").lower()
+    if preset not in PRESET_KEYS:
+        return None
+
+    def _num(key: str, default: float) -> float:
+        try:
+            return float(kv[key])
+        except (KeyError, ValueError):
+            return default
+
+    return CrossfeedSpec(
+        preset=preset,
+        strength=max(0.0, min(100.0, _num("strength", 100.0))),
+        custom_gain_db=_num("gain", -6.0),
+        custom_freq_hz=_num("freq", 700.0),
+        custom_delay_us=_num("delay", 300.0),
+    )
