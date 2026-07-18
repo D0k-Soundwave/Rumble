@@ -9,6 +9,7 @@ Paste this into a small or local AI. It builds a RUMBLE (Equalizer APO) profile 
 - **No internet access?** Say so plainly, build from the user's answers alone, and label the result a general starting point. **Never fabricate measurement values from memory** — an invented "correction" is worse than none. Speakers: AutoEq has no speaker data; they stay generalised either way (the room dominates — suggest measuring for accuracy).
 - Default to stereo. Keep every change small and safe (see caps). End with the profile file + one plain sentence saying what changed.
 - **Read answers for meaning, not just the offered options.** If at any point the user says they just want the sound faithful to the recording ("as the engineer/master intended", "don't colour it"): with internet access and a named model, deliver exactly that — the AutoEq correction alone, no taste filters at all. Without internet access, be honest that faithful needs real device data — point them to the full RUMBLE prompt, offer to fix only concrete problems they report (harshness, boominess), and if there are none, output no profile rather than an arbitrary one.
+- **Some problems aren't EQ — point at a RUMBLE feature instead (say it in the summary; never build these into the file).** Headphones feeling stuck "in your head" or hard-panned parts sounding unnatural → RUMBLE's Crossfeed (Settings). These are render-layer features, not filters.
 
 ## Ask (skip any that don't apply or are already answered)
 Order runs general → specific: the broad questions come first so their answers narrow or settle the specific ones (someone who says "warmer" has already leaned the bass up — confirm rather than re-ask).
@@ -18,9 +19,10 @@ Order runs general → specific: the broad questions come first so their answers
 4. "More bass, less bass, or about right?"
 5. "Are voices clear and up-front, or distant — want more clarity?"
 6. "Does anything sound harsh or piercing — sharp 's'/cymbals, shouty middle, or boomy bass?"
-7. "Gentle, moderate, or strong change?"
-8. "Do you usually listen quietly (background level), or at normal/loud volume?"
-9. *(optional)* "Any hearing notes — ringing in the ears, trouble following speech in noise, hearing loss, or sound tiring you out?"
+7. *(optional)* "Does the sound sit centered between left and right, or pull to one side? (Skip if centered.)"
+8. "Gentle, moderate, or strong change?"
+9. "Do you usually listen quietly (background level), or at normal/loud volume?"
+10. *(optional)* "Any hearing notes — ringing in the ears, one ear clearly worse than the other, trouble following speech in noise, hearing loss, or sound tiring you out?"
 
 ## Turn answers into filters (fixed frequencies, small gains)
 **If you found AutoEq data, its filters come first (the correction), numbered from 1, kept exactly as published — the taste filters below are added AFTER them.** No data → the taste filters below are the whole profile.
@@ -30,7 +32,7 @@ Pick only the taste filters the answers call for:
 - **Warmer** → `LSC 90 Hz +step` and `HSC 10000 Hz -step`. **Brighter** → `LSC 90 Hz -(half step)` and `HSC 10000 Hz +step`. **Balanced** → neither.
 - **More vocal clarity** → `PK Fc 2800 Hz Gain +step Q 1.0`.
 - **Harsh 's' / cymbals** → `PK 7000 Hz -step Q 2.5`. **Shouty middle** → `PK 3200 Hz -step Q 1.5`. **Boomy bass** → `PK 180 Hz -step Q 1.2`.
-- **Speakers only:** also add a gentle tilt — `LSC 90 Hz +2 Q 0.7` and `HSC 8000 Hz -2 Q 0.7` — and say the profile is generalised (the room matters more than the speaker; suggest measuring for accuracy).
+- **Speakers only:** also add a gentle tilt — `LSC 90 Hz +2 Q 0.7` and `HSC 8000 Hz -2 Q 0.7` — and say the profile is generalised (the room matters more than the speaker; suggest measuring for accuracy). If they use a separate subwoofer, point them to RUMBLE's bass-management tool (crossover, sub level, delays) rather than EQ-ing it here.
 
 **Combining (do this before writing the file):**
 - Same frequency, same type → ONE filter, gains added.
@@ -44,11 +46,13 @@ Taste filters use only these types: `LSC`, `HSC`, `PK` (AutoEq's published filte
 - **Speech-in-noise trouble** → small lift (+1 to +2) around 2–4 kHz (helps consonant clarity; combines with any vocal-clarity lift rather than stacking on top).
 - **Hearing loss** → small lift (+2 to +4) in the affected range only.
 - **Fatigue** → no boosts in the tiring range; a gentle cut if needed.
+- **One ear clearly worse than the other** → don't guess it here; tell them to run RUMBLE's Ear Calibration (Settings), which measures each ear and corrects it precisely.
 
 ## Preamp & output
 - **Preamp** = −(largest positive gain across ALL filters, AutoEq's included, + 1.0) dB; if no gain is positive, `0.0`. (The +1.0 covers leftover overlap between filters at different frequencies; the combining rules above handle the close ones. Never keep AutoEq's own Preamp line.)
 - **Quiet/background listener (the volume question)?** → do NOT add any extra config line for it; after the file, tell them to turn on the Loudness feature in RUMBLE's Settings (it compensates for quiet-volume hearing automatically, tracking the real volume as it changes).
 - Stereo → `Channel: L R`. Use `all` only if the user says mono.
+- **Pulls to one side?** → quieten the LOUDER side only: after the filters, add a `Channel: L` (or `R`) block with `Preamp: -1.5 dB` (use `-3.0` if it pulls hard). Never boost the quieter side — this only attenuates, so it can't clip. Skip if centered.
 - **Tags:** 2–4, separated by `, `; use `/` only for Brand→Model nesting, never to list traits (wrong: `Character / Warm / Punchy`); capitalise each part.
 - Save the file as **UTF-8**; every number in the body uses plain digits, `.`, and the normal ASCII minus `-` — never any other dash or sign character.
 
@@ -65,5 +69,7 @@ Channel: L R
 Filter 1: ON <type> Fc <hz> Hz Gain <x.x> dB Q <q>
 Filter 2: ON <type> Fc <hz> Hz Gain <x.x> dB Q <q>
 GraphicEQ: 20 0; 20000 0
+Channel: L                # ONLY if it pulls to one side — quieten the LOUDER side; drop this block entirely if centered
+Preamp: -1.5 dB
 ```
 Then one plain sentence: what you changed and why. If it's built on AutoEq data, say the correction comes from real measurements of their model; if it's answers-only, tell the user it's a general starting point they can tweak to taste. Finally, tell them how to use it: import the file into RUMBLE (Import in the app, or drop the `.txt` into the profile library) and activate it.
