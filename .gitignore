@@ -74,3 +74,6 @@ desktop.ini
 
 # Local runtime data (listener profiles, hearing results, settings) - never publish
 data/
+
+# Local tool settings - never publish
+.claude/
