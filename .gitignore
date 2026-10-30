@@ -71,3 +71,6 @@ desktop.ini
 /VU.png
 /hearing_frequency_test.txt
 /rumble_backup_*.zip
+
+# Local runtime data (listener profiles, hearing results, settings) - never publish
+data/
