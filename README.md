@@ -4,6 +4,8 @@ A Windows desktop app for creating, organising, previewing and instantly
 activating [Equalizer APO](https://sourceforge.net/projects/equalizerapo/)
 equalization profiles for headphones, IEMs and speakers.
 
+![RUMBLE main window: profile tree, EQ curve editor, level meters and filter bands](docs/images/rumble-main-window.png)
+
 > RUMBLE manages EQ profiles for Equalizer APO; it does **not** install APO.
 > Equalizer APO is a separate, system-level audio driver you install yourself
 > (it requires administrator rights and a reboot). The app and installer link you
